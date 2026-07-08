@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clienti - Azienda Agricola Cristina</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="section-page active" id="clienti-section">
+        <div class="section-header">
+            <h2>Clienti</h2>
+            <button id="add-cliente-btn">Nuovo Cliente</button>
+        </div>
+        <div class="data-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ragione Sociale</th>
+                        <th>Nome/Cognome</th>
+                        <th>Città</th>
+                        <th>Telefono</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="clienti-table-body">
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Caricamento...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for creating/editing Cliente -->
+    <div class="modal" id="cliente-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="cliente-modal-title">Nuovo Cliente</h3>
+                <button class="close-btn" onclick="closeClienteModal()">&times;</button>
+            </div>
+            <form class="modal-form" id="cliente-form">
+                <label>Ragione Sociale</label>
+                <input type="text" id="cliente-ragione-sociale">
+                <label>Nome</label>
+                <input type="text" id="cliente-nome">
+                <label>Cognome</label>
+                <input type="text" id="cliente-cognome">
+                <label>Indirizzo</label>
+                <input type="text" id="cliente-indirizzo">
+                <label>Città</label>
+                <input type="text" id="cliente-citta">
+                <label>CAP</label>
+                <input type="text" id="cliente-cap">
+                <label>Provincia</label>
+                <input type="text" id="cliente-provincia">
+                <label>Telefono</label>
+                <input type="text" id="cliente-telefono">
+                <label>Email</label>
+                <input type="email" id="cliente-email">
+                <label>P.IVA</label>
+                <input type="text" id="cliente-piva">
+                <label>Codice Fiscale</label>
+                <input type="text" id="cliente-cf">
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="closeClienteModal()">Annulla</button>
+                    <button type="submit" class="save-btn">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="clienti.js"></script>
+</body>
+</html>

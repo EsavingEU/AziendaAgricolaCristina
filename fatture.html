@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fatture - Azienda Agricola Cristina</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="section-page active" id="fatture-section">
+        <div class="section-header">
+            <h2>Fatture</h2>
+            <button id="add-fattura-btn">Nuova Fattura</button>
+        </div>
+        <div class="data-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Numero</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>DDT Inclusi</th>
+                        <th>Totale</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="fatture-table-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Caricamento...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for creating/editing Fattura -->
+    <div class="modal" id="fattura-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="fattura-modal-title">Nuova Fattura</h3>
+                <button class="close-btn" onclick="closeFatturaModal()">&times;</button>
+            </div>
+            <form class="modal-form" id="fattura-form">
+                <label>Numero Fattura</label>
+                <input type="text" id="fattura-numero" required>
+                <label>Data</label>
+                <input type="date" id="fattura-data" required>
+                <label>Cliente</label>
+                <select id="fattura-cliente" required>
+                    <option value="">Seleziona cliente</option>
+                </select>
+                <label>DDT da Fatturare</label>
+                <div id="fattura-ddt-container"></div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="closeFatturaModal()">Annulla</button>
+                    <button type="submit" class="save-btn">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="fatture.js"></script>
+</body>
+</html>

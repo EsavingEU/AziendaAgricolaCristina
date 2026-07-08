@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDT - Azienda Agricola Cristina</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="section-page active" id="ddt-section">
+        <div class="section-header">
+            <h2>Documenti di Trasporto (DDT)</h2>
+            <button id="add-ddt-btn">Nuovo DDT</button>
+        </div>
+        <div class="data-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Totale</th>
+                        <th>Stato</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="ddt-table-body">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Caricamento...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal for creating/editing DDT -->
+    <div class="modal" id="ddt-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="ddt-modal-title">Nuovo DDT</h3>
+                <button class="close-btn" onclick="closeDDTModal()">&times;</button>
+            </div>
+            <form class="modal-form" id="ddt-form">
+                <label>Cliente</label>
+                <select id="ddt-cliente" required>
+                    <option value="">Seleziona cliente</option>
+                </select>
+                <label>Data</label>
+                <input type="date" id="ddt-data" required>
+                <div id="ddt-righe-container"></div>
+                <button type="button" onclick="addDDTRiga()">Aggiungi Riga</button>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="closeDDTModal()">Annulla</button>
+                    <button type="submit" class="save-btn">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="ddt.js"></script>
+</body>
+</html>
