@@ -13,6 +13,7 @@ const ddtForm = document.getElementById('ddt-form');
 const ddtModalTitle = document.getElementById('ddt-modal-title');
 const ddtClienteSelect = document.getElementById('ddt-cliente');
 const ddtRigheContainer = document.getElementById('ddt-righe-container');
+const ddtArticoloSelect = document.getElementById('ddt-articolo-select');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,6 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     addDDTBtn.addEventListener('click', () => openDDTModal());
     ddtForm.addEventListener('submit', handleDDTSubmit);
+    ddtArticoloSelect.addEventListener('change', handleArticoloChange);
+}
+
+function handleArticoloChange() {
+    const prodottoId = ddtArticoloSelect.value;
+    const prodotto = prodotti.find(p => p.id === prodottoId);
+    if (prodotto) {
+        document.getElementById('ddt-prezzo').value = prodotto.prezzoUnitario;
+    }
 }
 
 async function loadData() {
@@ -39,6 +49,7 @@ async function loadData() {
         
         renderDDT();
         populateClienteSelect();
+        populateArticoloSelect();
     } catch (error) {
         console.error('Errore caricamento dati:', error);
         ddtTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Errore caricamento dati</td></tr>';
@@ -74,6 +85,11 @@ function populateClienteSelect() {
         clienti.map(cliente => `<option value="${cliente.id}">${cliente.ragioneSociale || cliente.nome + ' ' + cliente.cognome}</option>`).join('');
 }
 
+function populateArticoloSelect() {
+    ddtArticoloSelect.innerHTML = '<option value="">Seleziona articolo</option>' + 
+        prodotti.map(prodotto => `<option value="${prodotto.id}">${prodotto.nome} - €${prodotto.prezzoUnitario}/${prodotto.unitaMisura}</option>`).join('');
+}
+
 function openDDTModal(ddtItem = null) {
     editingDDT = ddtItem;
     ddtModalTitle.textContent = ddtItem ? 'Modifica DDT' : 'Nuovo DDT';
@@ -88,6 +104,7 @@ function openDDTModal(ddtItem = null) {
     }
     
     renderDDTRighe();
+    populateArticoloSelect();
     ddtModal.classList.add('active');
 }
 
@@ -99,8 +116,14 @@ function closeDDTModal() {
 }
 
 function addDDTRiga() {
-    const prodottoId = prompt('Seleziona ID prodotto:\n' + prodotti.map(p => `${p.id}: ${p.nome}`).join('\n'));
-    if (!prodottoId) return;
+    const prodottoId = ddtArticoloSelect.value;
+    const quantita = parseFloat(document.getElementById('ddt-quantita').value);
+    const prezzo = parseFloat(document.getElementById('ddt-prezzo').value);
+    
+    if (!prodottoId || !quantita || isNaN(quantita)) {
+        alert('Seleziona un articolo e inserisci la quantità');
+        return;
+    }
     
     const prodotto = prodotti.find(p => p.id === prodottoId);
     if (!prodotto) {
@@ -108,20 +131,24 @@ function addDDTRiga() {
         return;
     }
     
-    const quantita = parseFloat(prompt('Quantità:'));
-    if (!quantita || isNaN(quantita)) return;
+    const prezzoUnitario = prezzo || prodotto.prezzoUnitario;
     
     const riga = {
         prodottoId,
         nomeProdotto: prodotto.nome,
         quantita,
         unitaMisura: prodotto.unitaMisura,
-        prezzoUnitario: prodotto.prezzoUnitario,
-        totale: (quantita * prodotto.prezzoUnitario).toFixed(2)
+        prezzoUnitario,
+        totale: (quantita * prezzoUnitario).toFixed(2)
     };
     
     ddtRighe.push(riga);
     renderDDTRighe();
+    
+    // Reset form fields
+    ddtArticoloSelect.value = '';
+    document.getElementById('ddt-quantita').value = '';
+    document.getElementById('ddt-prezzo').value = '';
 }
 
 function renderDDTRighe() {
