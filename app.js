@@ -82,9 +82,8 @@ function handleMenuClick(e) {
 }
 
 function openSection(sectionName) {
-    // Open section in new tab
-    const url = `${sectionName}.html`;
-    window.open(url, '_blank');
+    // Navigate to section in same tab
+    window.location.href = `${sectionName}.html`;
 }
 
 // Initialize on DOM load
