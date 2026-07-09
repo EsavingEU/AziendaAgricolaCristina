@@ -207,6 +207,11 @@ async function generateFatturaPDF(id) {
     const cliente = clienti.find(c => c.id === fattura.clienteId);
     if (!cliente) return;
     
+    // Carica tutti i DDT per trovare quelli inclusi nella fattura
+    const ddtSnapshot = await db.collection('ddt').get();
+    const tuttiDDT = ddtSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const ddtInclusi = tuttiDDT.filter(d => fattura.ddtIds.includes(d.id));
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
@@ -240,7 +245,6 @@ async function generateFatturaPDF(id) {
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    const ddtInclusi = ddtNonFatturati.filter(d => fattura.ddtIds.includes(d.id));
     let y = 115;
     
     ddtInclusi.forEach(ddt => {
