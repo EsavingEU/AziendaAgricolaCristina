@@ -27,20 +27,19 @@ async function loadClienti() {
         renderClienti();
     } catch (error) {
         console.error('Errore caricamento clienti:', error);
-        clientiTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Errore caricamento dati</td></tr>';
+        clientiTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Errore caricamento dati</td></tr>';
     }
 }
 
 function renderClienti() {
     if (clienti.length === 0) {
-        clientiTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nessun cliente presente</td></tr>';
+        clientiTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nessun cliente presente</td></tr>';
         return;
     }
 
     clientiTableBody.innerHTML = clienti.map(cliente => `
         <tr>
             <td>${cliente.ragioneSociale || '-'}</td>
-            <td>${cliente.nome} ${cliente.cognome}</td>
             <td>${cliente.citta} (${cliente.provincia})</td>
             <td>${cliente.telefono}</td>
             <td>
@@ -57,8 +56,6 @@ function openClienteModal(cliente = null) {
     
     if (cliente) {
         document.getElementById('cliente-ragione-sociale').value = cliente.ragioneSociale || '';
-        document.getElementById('cliente-nome').value = cliente.nome || '';
-        document.getElementById('cliente-cognome').value = cliente.cognome || '';
         document.getElementById('cliente-indirizzo').value = cliente.indirizzo || '';
         document.getElementById('cliente-citta').value = cliente.citta || '';
         document.getElementById('cliente-cap').value = cliente.cap || '';
@@ -85,8 +82,6 @@ async function handleClienteSubmit(e) {
     
     const clienteData = {
         ragioneSociale: document.getElementById('cliente-ragione-sociale').value,
-        nome: document.getElementById('cliente-nome').value,
-        cognome: document.getElementById('cliente-cognome').value,
         indirizzo: document.getElementById('cliente-indirizzo').value,
         citta: document.getElementById('cliente-citta').value,
         cap: document.getElementById('cliente-cap').value,

@@ -58,12 +58,13 @@ function renderFatture() {
             <tr>
                 <td>${fattura.numero}</td>
                 <td>${fattura.data}</td>
-                <td>${cliente?.ragioneSociale || cliente?.nome + ' ' + cliente?.cognome}</td>
+                <td>${cliente?.ragioneSociale || '-'}</td>
                 <td>${fattura.ddtIds.length} DDT</td>
                 <td>€${fattura.totale}</td>
                 <td>
                     <button class="action-btn edit-btn" onclick="editFattura('${fattura.id}')">Modifica</button>
                     <button class="action-btn delete-btn" onclick="deleteFattura('${fattura.id}')">Elimina</button>
+                    <button class="action-btn" style="background: #27ae60; color: white;" onclick="generateFatturaPDF('${fattura.id}')">PDF</button>
                 </td>
             </tr>
         `;
@@ -72,7 +73,7 @@ function renderFatture() {
 
 function populateClienteSelect() {
     fatturaClienteSelect.innerHTML = '<option value="">Seleziona cliente</option>' + 
-        clienti.map(cliente => `<option value="${cliente.id}">${cliente.ragioneSociale || cliente.nome + ' ' + cliente.cognome}</option>`).join('');
+        clienti.map(cliente => `<option value="${cliente.id}">${cliente.ragioneSociale || '-'}</option>`).join('');
 }
 
 function handleClienteChange() {
@@ -197,4 +198,99 @@ function editFattura(id) {
     if (fattura) {
         openFatturaModal(fattura);
     }
+}
+
+async function generateFatturaPDF(id) {
+    const fattura = fatture.find(f => f.id === id);
+    if (!fattura) return;
+    
+    const cliente = clienti.find(c => c.id === fattura.clienteId);
+    if (!cliente) return;
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FATTURA', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Fattura N: ${fattura.numero}`, 20, 35);
+    doc.text(`Data: ${fattura.data}`, 20, 42);
+    
+    // Cliente
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CLIENTE', 20, 55);
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 62);
+    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 69);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 76);
+    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 83);
+    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 90);
+    
+    // DDT inclusi
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DDT INCLUSI', 20, 105);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const ddtInclusi = ddtNonFatturati.filter(d => fattura.ddtIds.includes(d.id));
+    let y = 115;
+    
+    ddtInclusi.forEach(ddt => {
+        doc.text(`DDT ${ddt.id.slice(0, 8)}... - Data: ${ddt.data} - Totale: €${ddt.totale}`, 20, y);
+        y += 7;
+    });
+    
+    // Tabella articoli
+    y += 10;
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ARTICOLI', 20, y);
+    
+    y += 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Articolo', 20, y);
+    doc.text('Quantità', 100, y);
+    doc.text('Prezzo', 130, y);
+    doc.text('Totale', 160, y);
+    
+    y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.line(20, y - 2, 180, y - 2);
+    
+    // Aggrega tutte le righe dai DDT
+    let totaleGenerale = 0;
+    ddtInclusi.forEach(ddt => {
+        ddt.righe.forEach(riga => {
+            y += 7;
+            doc.text(riga.nomeProdotto, 20, y);
+            doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
+            doc.text(`€${riga.prezzoUnitario}`, 130, y);
+            doc.text(`€${riga.totale}`, 160, y);
+            totaleGenerale += parseFloat(riga.totale);
+        });
+    });
+    
+    y += 10;
+    doc.line(20, y - 2, 180, y - 2);
+    
+    // Totale
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTALE: €${totaleGenerale.toFixed(2)}`, 160, y + 10);
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Azienda Agricola Cristina', 105, 280, { align: 'center' });
+    
+    doc.save(`Fattura_${fattura.numero}_${fattura.data}.pdf`);
 }
