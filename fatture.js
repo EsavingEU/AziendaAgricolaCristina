@@ -4,6 +4,7 @@ let ddtNonFatturati = [];
 let clienti = [];
 let editingFattura = null;
 let selectedDDT = [];
+let selectedYear = '';
 
 // DOM Elements
 const fattureTableBody = document.getElementById('fatture-table-body');
@@ -13,17 +14,71 @@ const fatturaForm = document.getElementById('fattura-form');
 const fatturaModalTitle = document.getElementById('fattura-modal-title');
 const fatturaClienteSelect = document.getElementById('fattura-cliente');
 const fatturaDDTContainer = document.getElementById('fattura-ddt-container');
+const fatturaYearFilter = document.getElementById('fattura-year-filter');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    populateYearFilter();
     loadData();
     setupEventListeners();
 });
+
+function populateYearFilter() {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2000;
+    
+    fatturaYearFilter.innerHTML = '<option value="">Tutti gli anni</option>';
+    for (let year = currentYear; year >= startYear; year--) {
+        fatturaYearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+    }
+    
+    // Seleziona l'anno corrente di default
+    fatturaYearFilter.value = currentYear;
+    selectedYear = currentYear;
+}
+
+function filterFatturaByYear() {
+    selectedYear = fatturaYearFilter.value;
+    renderFatture();
+}
 
 function setupEventListeners() {
     addFatturaBtn.addEventListener('click', () => openFatturaModal());
     fatturaForm.addEventListener('submit', handleFatturaSubmit);
     fatturaClienteSelect.addEventListener('change', handleClienteChange);
+}
+
+// Funzione per generare numero progressivo Fattura
+async function generateFatturaNumber() {
+    const currentYear = new Date().getFullYear();
+    const yearSuffix = currentYear.toString().slice(-2);
+    
+    // Cerca tutte le fatture dell'anno corrente
+    const fattureSnapshot = await db.collection('fatture').get();
+    const allFatture = fattureSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Filtra fatture dell'anno corrente
+    const currentYearFatture = allFatture.filter(f => {
+        const fatturaYear = new Date(f.data).getFullYear();
+        return fatturaYear === currentYear;
+    });
+    
+    // Trova il numero massimo
+    let maxNumber = 0;
+    currentYearFatture.forEach(f => {
+        if (f.numero) {
+            const parts = f.numero.split(' - ');
+            if (parts.length === 2 && parts[1] === yearSuffix) {
+                const num = parseInt(parts[0]);
+                if (!isNaN(num) && num > maxNumber) {
+                    maxNumber = num;
+                }
+            }
+        }
+    });
+    
+    // Restituisci il prossimo numero
+    return `${maxNumber + 1} - ${yearSuffix}`;
 }
 
 async function loadData() {
@@ -47,12 +102,22 @@ async function loadData() {
 }
 
 function renderFatture() {
-    if (fatture.length === 0) {
+    let fattureToRender = fatture;
+    
+    // Filtra per anno se selezionato
+    if (selectedYear) {
+        fattureToRender = fatture.filter(f => {
+            const fatturaYear = new Date(f.data).getFullYear();
+            return fatturaYear === parseInt(selectedYear);
+        });
+    }
+    
+    if (fattureToRender.length === 0) {
         fattureTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessuna fattura presente</td></tr>';
         return;
     }
 
-    fattureTableBody.innerHTML = fatture.map(fattura => {
+    fattureTableBody.innerHTML = fattureToRender.map(fattura => {
         const cliente = clienti.find(c => c.id === fattura.clienteId);
         return `
             <tr>
@@ -150,7 +215,6 @@ async function handleFatturaSubmit(e) {
     const totale = ddtSelezionati.reduce((sum, ddt) => sum + parseFloat(ddt.totale), 0);
     
     const fatturaData = {
-        numero: document.getElementById('fattura-numero').value,
         data: document.getElementById('fattura-data').value,
         clienteId: document.getElementById('fattura-cliente').value,
         ddtIds: selectedDDT,
@@ -162,6 +226,9 @@ async function handleFatturaSubmit(e) {
         if (editingFattura) {
             await db.collection('fatture').doc(editingFattura.id).update(fatturaData);
         } else {
+            // Genera numero automatico solo per nuove fatture
+            const numero = await generateFatturaNumber();
+            fatturaData.numero = numero;
             const fatturaRef = await db.collection('fatture').add(fatturaData);
             
             // Mark DDT as fatturato
@@ -182,11 +249,23 @@ async function handleFatturaSubmit(e) {
 }
 
 async function deleteFattura(id) {
-    if (!confirm('Sei sicuro di voler eliminare questa fattura?')) return;
+    if (!confirm('Sei sicuro di voler eliminare questa fattura? I DDT associati torneranno disponibili per essere fatturati.')) return;
     
     try {
+        const fattura = fatture.find(f => f.id === id);
+        if (fattura) {
+            // Rimuovi lo stato fatturato dai DDT associati
+            for (const ddtId of fattura.ddtIds) {
+                await db.collection('ddt').doc(ddtId).update({ 
+                    fatturato: false,
+                    fatturaId: null
+                });
+            }
+        }
+        
         await db.collection('fatture').doc(id).delete();
         loadData();
+        alert('Fattura eliminata con successo');
     } catch (error) {
         console.error('Errore eliminazione fattura:', error);
         alert('Errore eliminazione fattura');

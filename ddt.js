@@ -4,6 +4,7 @@ let clienti = [];
 let prodotti = [];
 let editingDDT = null;
 let ddtRighe = [];
+let selectedYear = '';
 
 // DOM Elements
 const ddtTableBody = document.getElementById('ddt-table-body');
@@ -14,12 +15,33 @@ const ddtModalTitle = document.getElementById('ddt-modal-title');
 const ddtClienteSelect = document.getElementById('ddt-cliente');
 const ddtRigheContainer = document.getElementById('ddt-righe-container');
 const ddtArticoloSelect = document.getElementById('ddt-articolo-select');
+const ddtYearFilter = document.getElementById('ddt-year-filter');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    populateYearFilter();
     loadData();
     setupEventListeners();
 });
+
+function populateYearFilter() {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2000;
+    
+    ddtYearFilter.innerHTML = '<option value="">Tutti gli anni</option>';
+    for (let year = currentYear; year >= startYear; year--) {
+        ddtYearFilter.innerHTML += `<option value="${year}">${year}</option>`;
+    }
+    
+    // Seleziona l'anno corrente di default
+    ddtYearFilter.value = currentYear;
+    selectedYear = currentYear;
+}
+
+function filterDDTByYear() {
+    selectedYear = ddtYearFilter.value;
+    renderDDT();
+}
 
 function setupEventListeners() {
     addDDTBtn.addEventListener('click', () => openDDTModal());
@@ -33,6 +55,39 @@ function handleArticoloChange() {
     if (prodotto) {
         document.getElementById('ddt-prezzo').value = prodotto.prezzoUnitario;
     }
+}
+
+// Funzione per generare numero progressivo DDT
+async function generateDDTNumber() {
+    const currentYear = new Date().getFullYear();
+    const yearSuffix = currentYear.toString().slice(-2);
+    
+    // Cerca tutti i DDT dell'anno corrente
+    const ddtSnapshot = await db.collection('ddt').get();
+    const allDDT = ddtSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Filtra DDT dell'anno corrente
+    const currentYearDDT = allDDT.filter(d => {
+        const ddtYear = new Date(d.data).getFullYear();
+        return ddtYear === currentYear;
+    });
+    
+    // Trova il numero massimo
+    let maxNumber = 0;
+    currentYearDDT.forEach(d => {
+        if (d.numero) {
+            const parts = d.numero.split(' - ');
+            if (parts.length === 2 && parts[1] === yearSuffix) {
+                const num = parseInt(parts[0]);
+                if (!isNaN(num) && num > maxNumber) {
+                    maxNumber = num;
+                }
+            }
+        }
+    });
+    
+    // Restituisci il prossimo numero
+    return `${maxNumber + 1} - ${yearSuffix}`;
 }
 
 async function loadData() {
@@ -57,16 +112,26 @@ async function loadData() {
 }
 
 function renderDDT() {
-    if (ddt.length === 0) {
+    let ddtToRender = ddt;
+    
+    // Filtra per anno se selezionato
+    if (selectedYear) {
+        ddtToRender = ddt.filter(d => {
+            const ddtYear = new Date(d.data).getFullYear();
+            return ddtYear === parseInt(selectedYear);
+        });
+    }
+    
+    if (ddtToRender.length === 0) {
         ddtTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun DDT presente</td></tr>';
         return;
     }
 
-    ddtTableBody.innerHTML = ddt.map(ddtItem => {
+    ddtTableBody.innerHTML = ddtToRender.map(ddtItem => {
         const cliente = clienti.find(c => c.id === ddtItem.clienteId);
         return `
             <tr>
-                <td>${ddtItem.id.slice(0, 8)}...</td>
+                <td>${ddtItem.numero || ddtItem.id.slice(0, 8)}...</td>
                 <td>${ddtItem.data}</td>
                 <td>${cliente?.ragioneSociale || '-'}</td>
                 <td>€${ddtItem.totale}</td>
@@ -189,6 +254,9 @@ async function handleDDTSubmit(e) {
         if (editingDDT) {
             await db.collection('ddt').doc(editingDDT.id).update(ddtData);
         } else {
+            // Genera numero automatico solo per nuovi DDT
+            const numero = await generateDDTNumber();
+            ddtData.numero = numero;
             await db.collection('ddt').add(ddtData);
         }
         

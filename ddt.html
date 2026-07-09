@@ -13,7 +13,12 @@
                 <button onclick="window.location.href='index.html'" class="back-btn">← Torna alla Home</button>
                 <h2>Documenti di Trasporto (DDT)</h2>
             </div>
-            <button id="add-ddt-btn">Nuovo DDT</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="ddt-year-filter" onchange="filterDDTByYear()">
+                    <option value="">Tutti gli anni</option>
+                </select>
+                <button id="add-ddt-btn">Nuovo DDT</button>
+            </div>
         </div>
         <div class="data-table">
             <table>

@@ -13,7 +13,12 @@
                 <button onclick="window.location.href='index.html'" class="back-btn">← Torna alla Home</button>
                 <h2>Fatture</h2>
             </div>
-            <button id="add-fattura-btn">Nuova Fattura</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="fattura-year-filter" onchange="filterFatturaByYear()">
+                    <option value="">Tutti gli anni</option>
+                </select>
+                <button id="add-fattura-btn">Nuova Fattura</button>
+            </div>
         </div>
         <div class="data-table">
             <table>
@@ -44,8 +49,6 @@
                 <button class="close-btn" onclick="closeFatturaModal()">&times;</button>
             </div>
             <form class="modal-form" id="fattura-form">
-                <label>Numero Fattura</label>
-                <input type="text" id="fattura-numero" required>
                 <label>Data</label>
                 <input type="date" id="fattura-data" required>
                 <label>Cliente</label>
