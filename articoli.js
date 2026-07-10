@@ -27,13 +27,13 @@ async function loadArticoli() {
         renderArticoli();
     } catch (error) {
         console.error('Errore caricamento articoli:', error);
-        articoliTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Errore caricamento dati</td></tr>';
+        articoliTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Errore caricamento dati</td></tr>';
     }
 }
 
 function renderArticoli() {
     if (articoli.length === 0) {
-        articoliTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nessun articolo presente</td></tr>';
+        articoliTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nessun articolo presente</td></tr>';
         return;
     }
 
@@ -42,7 +42,6 @@ function renderArticoli() {
             <td>${articolo.nome}</td>
             <td>${articolo.descrizione}</td>
             <td>${articolo.unitaMisura}</td>
-            <td>€${articolo.prezzoUnitario}</td>
             <td>
                 <button class="action-btn edit-btn" onclick="editArticolo('${articolo.id}')">Modifica</button>
                 <button class="action-btn delete-btn" onclick="deleteArticolo('${articolo.id}')">Elimina</button>
@@ -59,7 +58,6 @@ function openArticoloModal(articolo = null) {
         document.getElementById('articolo-nome').value = articolo.nome;
         document.getElementById('articolo-descrizione').value = articolo.descrizione;
         document.getElementById('articolo-unita').value = articolo.unitaMisura;
-        document.getElementById('articolo-prezzo').value = articolo.prezzoUnitario;
     } else {
         articoloForm.reset();
     }
@@ -79,8 +77,7 @@ async function handleArticoloSubmit(e) {
     const articoloData = {
         nome: document.getElementById('articolo-nome').value,
         descrizione: document.getElementById('articolo-descrizione').value,
-        unitaMisura: document.getElementById('articolo-unita').value,
-        prezzoUnitario: parseFloat(document.getElementById('articolo-prezzo').value) || 0
+        unitaMisura: document.getElementById('articolo-unita').value
     };
 
     try {

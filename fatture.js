@@ -113,7 +113,7 @@ function renderFatture() {
     }
     
     if (fattureToRender.length === 0) {
-        fattureTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessuna fattura presente</td></tr>';
+        fattureTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nessuna fattura presente</td></tr>';
         return;
     }
 
@@ -125,6 +125,8 @@ function renderFatture() {
                 <td>${fattura.data}</td>
                 <td>${cliente?.ragioneSociale || '-'}</td>
                 <td>${fattura.ddtIds.length} DDT</td>
+                <td>€${fattura.totaleImponibile || fattura.totale}</td>
+                <td>€${fattura.iva || '0.00'}</td>
                 <td>€${fattura.totale}</td>
                 <td>
                     <button class="action-btn edit-btn" onclick="editFattura('${fattura.id}')">Modifica</button>
@@ -212,12 +214,16 @@ async function handleFatturaSubmit(e) {
     }
     
     const ddtSelezionati = ddtNonFatturati.filter(ddt => selectedDDT.includes(ddt.id));
-    const totale = ddtSelezionati.reduce((sum, ddt) => sum + parseFloat(ddt.totale), 0);
+    const totaleImponibile = ddtSelezionati.reduce((sum, ddt) => sum + parseFloat(ddt.totaleImponibile || ddt.totale), 0);
+    const iva = totaleImponibile * 0.04;
+    const totale = totaleImponibile + iva;
     
     const fatturaData = {
         data: document.getElementById('fattura-data').value,
         clienteId: document.getElementById('fattura-cliente').value,
         ddtIds: selectedDDT,
+        totaleImponibile,
+        iva,
         totale,
         createdAt: new Date()
     };

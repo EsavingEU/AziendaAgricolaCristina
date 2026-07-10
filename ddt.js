@@ -50,11 +50,7 @@ function setupEventListeners() {
 }
 
 function handleArticoloChange() {
-    const prodottoId = ddtArticoloSelect.value;
-    const prodotto = prodotti.find(p => p.id === prodottoId);
-    if (prodotto) {
-        document.getElementById('ddt-prezzo').value = prodotto.prezzoUnitario;
-    }
+    // Rimuovo auto-compilazione prezzo dato che gli articoli non hanno più prezzo fisso
 }
 
 // Funzione per generare numero progressivo DDT
@@ -123,7 +119,7 @@ function renderDDT() {
     }
     
     if (ddtToRender.length === 0) {
-        ddtTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nessun DDT presente</td></tr>';
+        ddtTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nessun DDT presente</td></tr>';
         return;
     }
 
@@ -134,6 +130,8 @@ function renderDDT() {
                 <td>${ddtItem.numero || ddtItem.id.slice(0, 8)}...</td>
                 <td>${ddtItem.data}</td>
                 <td>${cliente?.ragioneSociale || '-'}</td>
+                <td>€${ddtItem.totaleImponibile || ddtItem.totale}</td>
+                <td>€${ddtItem.iva || '0.00'}</td>
                 <td>€${ddtItem.totale}</td>
                 <td>${ddtItem.fatturato ? 'Fatturato' : 'Non Fatturato'}</td>
                 <td>
@@ -239,12 +237,16 @@ async function handleDDTSubmit(e) {
         return;
     }
     
-    const totale = ddtRighe.reduce((sum, riga) => sum + parseFloat(riga.totale), 0);
+    const totaleImponibile = ddtRighe.reduce((sum, riga) => sum + parseFloat(riga.totale), 0);
+    const iva = totaleImponibile * 0.04;
+    const totale = totaleImponibile + iva;
     
     const ddtData = {
         clienteId: document.getElementById('ddt-cliente').value,
         data: document.getElementById('ddt-data').value,
         righe: ddtRighe,
+        totaleImponibile,
+        iva,
         totale,
         fatturato: false,
         createdAt: new Date()
@@ -297,15 +299,25 @@ async function generateDDTPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Header
+    // Logo e informazioni azienda (in alto a sinistra)
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Azienda Agricola Cristina', 20, 15);
+    doc.text('P.I. 01920500228', 20, 20);
+    doc.text('via lung\'Adige Luigi Braille, 22', 20, 25);
+    doc.text('38121 Trento', 20, 30);
+    doc.text('Tel. 3333623616', 20, 35);
+    doc.text('stefano.dematte@tiscali.it', 20, 40);
+    
+    // Header DDT
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.text('DOCUMENTO DI TRASPORTO', 105, 20, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`DDT N: ${ddtItem.id.slice(0, 8)}`, 20, 35);
-    doc.text(`Data: ${ddtItem.data}`, 20, 42);
+    doc.text(`DDT N: ${ddtItem.numero}`, 120, 35);
+    doc.text(`Data: ${ddtItem.data}`, 120, 42);
     
     // Cliente
     doc.setFontSize(14);
@@ -316,7 +328,7 @@ async function generateDDTPDF(id) {
     doc.setFont('helvetica', 'normal');
     doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 62);
     doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 69);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 76);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ′′}) ${cliente.cap || ''}`, 20, 76);
     doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 83);
     doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 90);
     
@@ -348,15 +360,12 @@ async function generateDDTPDF(id) {
     y += 10;
     doc.line(20, y - 2, 180, y - 2);
     
-    // Totale
+    // Riepilogo IVA
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`TOTALE: €${ddtItem.totale}`, 160, y + 10);
+    doc.text(`Imponibile: €${ddtItem.totaleImponibile || ddtItem.totale}`, 120, y + 10);
+    doc.text(`IVA (4%): €${ddtItem.iva || '0.00'}`, 120, y + 17);
+    doc.text(`TOTALE: €${ddtItem.totale}`, 160, y + 24);
     
-    // Footer
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Azienda Agricola Cristina', 105, 280, { align: 'center' });
-    
-    doc.save(`DDT_${ddtItem.data}_${ddtItem.id.slice(0, 8)}.pdf`);
+    doc.save(`DDT_${ddtItem.numero}_${ddtItem.data}.pdf`);
 }
