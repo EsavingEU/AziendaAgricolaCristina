@@ -269,6 +269,12 @@ body::before {
     background: #f8f9fa;
 }
 
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+    width: 15%;
+    min-width: 120px;
+}
+
 .action-btn {
     padding: 8px 16px;
     border: none;

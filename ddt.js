@@ -195,18 +195,13 @@ function addDDTRiga() {
         return;
     }
     
-    if (!prezzo || isNaN(prezzo)) {
-        alert('Inserisci il prezzo unitario');
-        return;
-    }
-    
     const riga = {
         prodottoId,
         nomeProdotto: prodotto.nome,
         quantita,
         unitaMisura: prodotto.unitaMisura,
-        prezzoUnitario: prezzo,
-        totale: (quantita * prezzo).toFixed(2)
+        prezzoUnitario: prezzo || 0,
+        totale: prezzo ? (quantita * prezzo).toFixed(2) : '0.00'
     };
     
     ddtRighe.push(riga);
@@ -330,14 +325,15 @@ async function generateDDTPDF(id) {
     doc.text('stefano.dematte@tiscali.it', 20, 72);
     
     // Titolo a destra in alto
-    doc.setFontSize(18);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DOCUMENTO DI TRASPORTO', 120, 25);
+    doc.text('DOCUMENTO', 120, 25);
+    doc.text('DI TRASPORTO', 120, 32);
     
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`N: ${ddtItem.numero}`, 120, 35);
-    doc.text(`Data: ${ddtItem.data}`, 120, 42);
+    doc.text(`N: ${ddtItem.numero}`, 120, 42);
+    doc.text(`Data: ${ddtItem.data}`, 120, 49);
     
     // Linea di separazione
     doc.line(20, 78, 190, 78);

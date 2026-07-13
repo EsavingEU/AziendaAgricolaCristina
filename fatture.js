@@ -160,13 +160,13 @@ function renderDDTSelection() {
     
     fatturaDDTContainer.innerHTML = ddtCliente.map(ddt => `
         <div style="padding: 10px; border: 1px solid #e0e0e0; margin-bottom: 10px; border-radius: 8px;">
-            <label style="display: flex; align-items: center; cursor: pointer;">
+            <label style="display: flex; align-items: center; cursor: pointer; width: 100%;">
                 <input type="checkbox" 
                        value="${ddt.id}" 
                        ${selectedDDT.includes(ddt.id) ? 'checked' : ''}
                        onchange="toggleDDT('${ddt.id}')"
-                       style="margin-right: 10px;">
-                <span><strong>DDT ${ddt.id.slice(0, 8)}...</strong> - Data: ${ddt.data} - Totale: €${ddt.totale}</span>
+                       style="margin-right: 15px; flex-shrink: 0;">
+                <span style="flex: 1;"><strong>DDT ${ddt.numero}</strong> - Data: ${ddt.data} - Totale: €${ddt.totale}</span>
             </label>
         </div>
     `).join('');
