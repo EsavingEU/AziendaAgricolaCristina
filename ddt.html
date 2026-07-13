@@ -27,16 +27,13 @@
                         <th>Numero</th>
                         <th>Data</th>
                         <th>Cliente</th>
-                        <th>Imponibile</th>
-                        <th>IVA (4%)</th>
-                        <th>Totale</th>
                         <th>Stato</th>
                         <th>Azioni</th>
                     </tr>
                 </thead>
                 <tbody id="ddt-table-body">
                     <tr>
-                        <td colspan="8" style="text-align: center;">Caricamento...</td>
+                        <td colspan="5" style="text-align: center;">Caricamento...</td>
                     </tr>
                 </tbody>
             </table>
@@ -60,7 +57,7 @@
                 
                 <div style="border-top: 1px solid #e0e0e0; margin: 20px 0; padding-top: 20px;">
                     <h4 style="margin-bottom: 15px;">Aggiungi Articoli</h4>
-                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 10px;">
                         <div>
                             <label style="font-size: 12px;">Articolo</label>
                             <select id="ddt-articolo-select">
@@ -70,10 +67,6 @@
                         <div>
                             <label style="font-size: 12px;">Quantità</label>
                             <input type="number" id="ddt-quantita" step="0.01" placeholder="0.00">
-                        </div>
-                        <div>
-                            <label style="font-size: 12px;">Prezzo Unitario</label>
-                            <input type="number" id="ddt-prezzo" step="0.01" placeholder="0.00">
                         </div>
                         <div style="display: flex; align-items: center;">
                             <button type="button" onclick="addDDTRiga()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 20px; font-weight: bold;">+</button>

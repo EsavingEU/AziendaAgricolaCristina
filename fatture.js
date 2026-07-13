@@ -165,7 +165,7 @@ function renderDDTSelection() {
                        value="${ddt.id}" 
                        ${selectedDDT.includes(ddt.id) ? 'checked' : ''}
                        onchange="toggleDDT('${ddt.id}')"
-                       style="margin-right: 15px; flex-shrink: 0;">
+                       style="margin-right: 15px; flex-shrink: 0; width: 16px; height: 16px;">
                 <span style="flex: 1;"><strong>DDT ${ddt.numero}</strong> - Data: ${ddt.data} - Totale: €${ddt.totale}</span>
             </label>
         </div>

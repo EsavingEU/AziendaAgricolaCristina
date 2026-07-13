@@ -182,7 +182,6 @@ function closeDDTModal() {
 function addDDTRiga() {
     const prodottoId = ddtArticoloSelect.value;
     const quantita = parseFloat(document.getElementById('ddt-quantita').value);
-    const prezzo = parseFloat(document.getElementById('ddt-prezzo').value);
     
     if (!prodottoId || !quantita || isNaN(quantita)) {
         alert('Seleziona un articolo e inserisci la quantità');
@@ -199,9 +198,7 @@ function addDDTRiga() {
         prodottoId,
         nomeProdotto: prodotto.nome,
         quantita,
-        unitaMisura: prodotto.unitaMisura,
-        prezzoUnitario: prezzo || 0,
-        totale: prezzo ? (quantita * prezzo).toFixed(2) : '0.00'
+        unitaMisura: prodotto.unitaMisura
     };
     
     ddtRighe.push(riga);
@@ -210,13 +207,12 @@ function addDDTRiga() {
     // Reset form fields
     ddtArticoloSelect.value = '';
     document.getElementById('ddt-quantita').value = '';
-    document.getElementById('ddt-prezzo').value = '';
 }
 
 function renderDDTRighe() {
     ddtRigheContainer.innerHTML = ddtRighe.map((riga, index) => `
         <div style="padding: 10px; border: 1px solid #e0e0e0; margin-bottom: 10px; border-radius: 8px;">
-            <strong>${riga.nomeProdotto}</strong> x ${riga.quantita} ${riga.unitaMisura} = €${riga.totale}
+            <strong>${riga.nomeProdotto}</strong> x ${riga.quantita} ${riga.unitaMisura}
             <button type="button" onclick="removeDDTRiga(${index})" style="margin-left: 10px; background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Rimuovi</button>
         </div>
     `).join('');
