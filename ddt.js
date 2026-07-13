@@ -195,15 +195,18 @@ function addDDTRiga() {
         return;
     }
     
-    const prezzoUnitario = prezzo || prodotto.prezzoUnitario;
+    if (!prezzo || isNaN(prezzo)) {
+        alert('Inserisci il prezzo unitario');
+        return;
+    }
     
     const riga = {
         prodottoId,
         nomeProdotto: prodotto.nome,
         quantita,
         unitaMisura: prodotto.unitaMisura,
-        prezzoUnitario,
-        totale: (quantita * prezzoUnitario).toFixed(2)
+        prezzoUnitario: prezzo,
+        totale: (quantita * prezzo).toFixed(2)
     };
     
     ddtRighe.push(riga);
@@ -299,45 +302,55 @@ async function generateDDTPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Logo e informazioni azienda (in alto a sinistra)
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Azienda Agricola Cristina', 20, 15);
-    doc.text('P.I. 01920500228', 20, 20);
-    doc.text('via lung\'Adige Luigi Braille, 22', 20, 25);
-    doc.text('38121 Trento', 20, 30);
-    doc.text('Tel. 3333623616', 20, 35);
-    doc.text('stefano.dematte@tiscali.it', 20, 40);
-    
-    // Header DDT
-    doc.setFontSize(20);
+    // Logo in alto a sinistra (simulato con testo dato che non posso caricare immagine)
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('DOCUMENTO DI TRASPORTO', 105, 20, { align: 'center' });
+    doc.text('Azienda Agricola Cristina', 20, 20);
+    
+    // Riferimenti aziendali sotto il logo
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('P.I. 01920500228', 20, 28);
+    doc.text('via lung\'Adige Luigi Braille, 22', 20, 34);
+    doc.text('38121 Trento', 20, 40);
+    doc.text('Tel. 3333623616', 20, 46);
+    doc.text('stefano.dematte@tiscali.it', 20, 52);
+    
+    // Titolo a destra in alto
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DOCUMENTO DI TRASPORTO', 140, 25);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`DDT N: ${ddtItem.numero}`, 120, 35);
-    doc.text(`Data: ${ddtItem.data}`, 120, 42);
+    doc.text(`N: ${ddtItem.numero}`, 140, 35);
+    doc.text(`Data: ${ddtItem.data}`, 140, 42);
     
-    // Cliente
+    // Linea di separazione
+    doc.line(20, 58, 190, 58);
+    
+    // Cliente sotto
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DESTINATARIO', 20, 55);
+    doc.text('DESTINATARIO', 20, 68);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 62);
-    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 69);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 76);
-    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 83);
-    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 90);
+    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 76);
+    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 83);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 90);
+    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 97);
+    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 104);
+    
+    // Linea di separazione
+    doc.line(20, 110, 190, 110);
     
     // Tabella articoli
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('ARTICOLI', 20, 105);
+    doc.text('ARTICOLI', 20, 120);
     
-    let y = 115;
+    let y = 130;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Articolo', 20, y);
@@ -347,7 +360,7 @@ async function generateDDTPDF(id) {
     
     y += 8;
     doc.setFont('helvetica', 'normal');
-    doc.line(20, y - 2, 180, y - 2);
+    doc.line(20, y - 2, 190, y - 2);
     
     ddtItem.righe.forEach(riga => {
         y += 7;
@@ -358,7 +371,7 @@ async function generateDDTPDF(id) {
     });
     
     y += 10;
-    doc.line(20, y - 2, 180, y - 2);
+    doc.line(20, y - 2, 190, y - 2);
     
     // Riepilogo IVA
     doc.setFontSize(12);

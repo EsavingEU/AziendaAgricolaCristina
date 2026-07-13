@@ -300,52 +300,65 @@ async function generateFatturaPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Logo e informazioni azienda (in alto a sinistra)
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Azienda Agricola Cristina', 20, 15);
-    doc.text('P.I. 01920500228', 20, 20);
-    doc.text('via lung\'Adige Luigi Braille, 22', 20, 25);
-    doc.text('38121 Trento', 20, 30);
-    doc.text('Tel. 3333623616', 20, 35);
-    doc.text('stefano.dematte@tiscali.it', 20, 40);
-    
-    // Header
-    doc.setFontSize(20);
+    // Logo in alto a sinistra (simulato con testo dato che non posso caricare immagine)
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('FATTURA', 105, 20, { align: 'center' });
+    doc.text('Azienda Agricola Cristina', 20, 20);
+    
+    // Riferimenti aziendali sotto il logo
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('P.I. 01920500228', 20, 28);
+    doc.text('via lung\'Adige Luigi Braille, 22', 20, 34);
+    doc.text('38121 Trento', 20, 40);
+    doc.text('Tel. 3333623616', 20, 46);
+    doc.text('stefano.dematte@tiscali.it', 20, 52);
+    
+    // Titolo a destra in alto
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FATTURA', 140, 25);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Fattura N: ${fattura.numero}`, 120, 35);
-    doc.text(`Data: ${fattura.data}`, 120, 42);
+    doc.text(`N: ${fattura.numero}`, 140, 35);
+    doc.text(`Data: ${fattura.data}`, 140, 42);
     
-    // Cliente
+    // Linea di separazione
+    doc.line(20, 58, 190, 58);
+    
+    // Cliente sotto
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('CLIENTE', 20, 55);
+    doc.text('CLIENTE', 20, 68);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 62);
-    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 69);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 76);
-    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 83);
-    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 90);
+    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 76);
+    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 83);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 90);
+    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 97);
+    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 104);
+    
+    // Linea di separazione
+    doc.line(20, 110, 190, 110);
     
     // DDT inclusi
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DDT INCLUSI', 20, 105);
+    doc.text('DDT INCLUSI', 20, 120);
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    let y = 115;
+    let y = 130;
     
     ddtInclusi.forEach(ddt => {
-        doc.text(`DDT ${ddt.id.slice(0, 8)}... - Data: ${ddt.data} - Totale: €${ddt.totale}`, 20, y);
+        doc.text(`DDT ${ddt.numero} - Data: ${ddt.data} - Totale: €${ddt.totale}`, 20, y);
         y += 7;
     });
+    
+    // Linea di separazione
+    doc.line(20, y + 2, 190, y + 2);
     
     // Tabella articoli
     y += 10;
@@ -363,7 +376,7 @@ async function generateFatturaPDF(id) {
     
     y += 8;
     doc.setFont('helvetica', 'normal');
-    doc.line(20, y - 2, 180, y - 2);
+    doc.line(20, y - 2, 190, y - 2);
     
     // Aggrega tutte le righe dai DDT
     let totaleGenerale = 0;
@@ -379,7 +392,7 @@ async function generateFatturaPDF(id) {
     });
     
     y += 10;
-    doc.line(20, y - 2, 180, y - 2);
+    doc.line(20, y - 2, 190, y - 2);
     
     // Riepilogo IVA
     doc.setFontSize(12);

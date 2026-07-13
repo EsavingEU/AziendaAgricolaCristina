@@ -209,7 +209,7 @@ body {
 
 .section-header button {
     padding: 12px 24px;
-    background: #4a7c23;
+    background: #2d5016;
     color: white;
     border: none;
     border-radius: 10px;
@@ -220,7 +220,7 @@ body {
 }
 
 .section-header button:hover {
-    background: #3d661c;
+    background: #1e3a0f;
 }
 
 .data-table {
@@ -263,21 +263,21 @@ body {
 }
 
 .edit-btn {
-    background: #3498db;
+    background: #2d5016;
     color: white;
 }
 
 .edit-btn:hover {
-    background: #2980b9;
+    background: #1e3a0f;
 }
 
 .delete-btn {
-    background: #e74c3c;
+    background: #c0392b;
     color: white;
 }
 
 .delete-btn:hover {
-    background: #c0392b;
+    background: #a93226;
 }
 
 /* Modal */
@@ -379,10 +379,10 @@ body {
 }
 
 .save-btn {
-    background: #4a7c23;
+    background: #2d5016;
     color: white;
 }
 
 .save-btn:hover {
-    background: #3d661c;
+    background: #1e3a0f;
 }
