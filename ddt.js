@@ -151,7 +151,7 @@ function populateClienteSelect() {
 
 function populateArticoloSelect() {
     ddtArticoloSelect.innerHTML = '<option value="">Seleziona articolo</option>' + 
-        prodotti.map(prodotto => `<option value="${prodotto.id}">${prodotto.nome} - €${prodotto.prezzoUnitario}/${prodotto.unitaMisura}</option>`).join('');
+        prodotti.map(prodotto => `<option value="${prodotto.id}">${prodotto.nome}</option>`).join('');
 }
 
 function openDDTModal(ddtItem = null) {
@@ -302,55 +302,68 @@ async function generateDDTPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Logo in alto a sinistra (simulato con testo dato che non posso caricare immagine)
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Azienda Agricola Cristina', 20, 20);
+    try {
+        // Carica il logo come immagine
+        const logoImg = await fetch('logo.png').then(res => res.blob());
+        const logoDataUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(logoImg);
+        });
+        
+        // Aggiungi il logo in alto a sinistra
+        doc.addImage(logoDataUrl, 'PNG', 20, 10, 30, 30);
+    } catch (error) {
+        // Se il caricamento dell'immagine fallisce, usa il testo come fallback
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Azienda Agricola Cristina', 20, 20);
+    }
     
     // Riferimenti aziendali sotto il logo
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('P.I. 01920500228', 20, 28);
-    doc.text('via lung\'Adige Luigi Braille, 22', 20, 34);
-    doc.text('38121 Trento', 20, 40);
-    doc.text('Tel. 3333623616', 20, 46);
-    doc.text('stefano.dematte@tiscali.it', 20, 52);
+    doc.text('P.I. 01920500228', 20, 48);
+    doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
+    doc.text('38121 Trento', 20, 60);
+    doc.text('Tel. 3333623616', 20, 66);
+    doc.text('stefano.dematte@tiscali.it', 20, 72);
     
     // Titolo a destra in alto
-    doc.setFontSize(22);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('DOCUMENTO DI TRASPORTO', 140, 25);
+    doc.text('DOCUMENTO DI TRASPORTO', 120, 25);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`N: ${ddtItem.numero}`, 140, 35);
-    doc.text(`Data: ${ddtItem.data}`, 140, 42);
+    doc.text(`N: ${ddtItem.numero}`, 120, 35);
+    doc.text(`Data: ${ddtItem.data}`, 120, 42);
     
     // Linea di separazione
-    doc.line(20, 58, 190, 58);
+    doc.line(20, 78, 190, 78);
     
     // Cliente sotto
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DESTINATARIO', 20, 68);
+    doc.text('DESTINATARIO', 20, 88);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 76);
-    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 83);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 90);
-    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 97);
-    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 104);
+    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
+    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
+    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
+    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
     
     // Linea di separazione
-    doc.line(20, 110, 190, 110);
+    doc.line(20, 130, 190, 130);
     
     // Tabella articoli
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('ARTICOLI', 20, 120);
+    doc.text('ARTICOLI', 20, 140);
     
-    let y = 130;
+    let y = 150;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Articolo', 20, y);

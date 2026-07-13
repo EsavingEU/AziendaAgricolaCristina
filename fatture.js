@@ -172,12 +172,59 @@ function renderDDTSelection() {
     `).join('');
 }
 
+function renderFatturaRighe() {
+    const container = document.getElementById('fattura-righe-container');
+    const list = document.getElementById('fattura-righe-list');
+    
+    if (selectedDDT.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    
+    const ddtSelezionati = ddtNonFatturati.filter(ddt => selectedDDT.includes(ddt.id));
+    
+    let html = '';
+    ddtSelezionati.forEach(ddt => {
+        html += `<div style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 8px;">
+            <strong>DDT ${ddt.numero} - ${ddt.data}</strong>
+            <div style="margin-top: 10px;">`;
+        
+        ddt.righe.forEach((riga, index) => {
+            const hasPrice = riga.prezzoUnitario && riga.prezzoUnitario > 0;
+            html += `
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 5px; align-items: center;">
+                    <div style="font-size: 12px;">${riga.nomeProdotto} (${riga.quantita} ${riga.unitaMisura})</div>
+                    <div style="font-size: 12px;">Prezzo DDT: €${hasPrice ? riga.prezzoUnitario : '0.00'}</div>
+                    <div>
+                        <input type="number" 
+                               id="prezzo-${ddt.id}-${index}" 
+                               value="${hasPrice ? riga.prezzoUnitario : ''}" 
+                               step="0.01" 
+                               placeholder="Prezzo fattura"
+                               style="width: 100%; padding: 5px; font-size: 12px;"
+                               ${hasPrice ? 'readonly' : ''}>
+                    </div>
+                    <div style="font-size: 12px; color: ${hasPrice ? 'green' : 'red'};">
+                        ${hasPrice ? '✓ Prezzo presente' : '⚠ Inserisci prezzo'}
+                    </div>
+                </div>`;
+        });
+        
+        html += `</div></div>`;
+    });
+    
+    list.innerHTML = html;
+}
+
 function toggleDDT(ddtId) {
     if (selectedDDT.includes(ddtId)) {
         selectedDDT = selectedDDT.filter(id => id !== ddtId);
     } else {
         selectedDDT.push(ddtId);
     }
+    renderFatturaRighe();
 }
 
 function openFatturaModal(fattura = null) {
@@ -214,7 +261,46 @@ async function handleFatturaSubmit(e) {
     }
     
     const ddtSelezionati = ddtNonFatturati.filter(ddt => selectedDDT.includes(ddt.id));
-    const totaleImponibile = ddtSelezionati.reduce((sum, ddt) => sum + parseFloat(ddt.totaleImponibile || ddt.totale), 0);
+    
+    // Valida che tutte le righe abbiano prezzi
+    let righeFattura = [];
+    let prezziMancanti = false;
+    
+    ddtSelezionati.forEach(ddt => {
+        ddt.righe.forEach((riga, index) => {
+            const hasPrice = riga.prezzoUnitario && riga.prezzoUnitario > 0;
+            let prezzoFattura;
+            
+            if (hasPrice) {
+                prezzoFattura = riga.prezzoUnitario;
+            } else {
+                const prezzoInput = document.getElementById(`prezzo-${ddt.id}-${index}`);
+                prezzoFattura = parseFloat(prezzoInput.value);
+                
+                if (!prezzoFattura || isNaN(prezzoFattura)) {
+                    prezziMancanti = true;
+                    return;
+                }
+            }
+            
+            righeFattura.push({
+                prodottoId: riga.prodottoId,
+                nomeProdotto: riga.nomeProdotto,
+                quantita: riga.quantita,
+                unitaMisura: riga.unitaMisura,
+                prezzoUnitario: prezzoFattura,
+                totale: (riga.quantita * prezzoFattura).toFixed(2),
+                ddtId: ddt.id
+            });
+        });
+    });
+    
+    if (prezziMancanti) {
+        alert('Inserisci tutti i prezzi mancanti nelle righe della fattura');
+        return;
+    }
+    
+    const totaleImponibile = righeFattura.reduce((sum, riga) => sum + parseFloat(riga.totale), 0);
     const iva = totaleImponibile * 0.04;
     const totale = totaleImponibile + iva;
     
@@ -222,6 +308,7 @@ async function handleFatturaSubmit(e) {
         data: document.getElementById('fattura-data').value,
         clienteId: document.getElementById('fattura-cliente').value,
         ddtIds: selectedDDT,
+        righe: righeFattura,
         totaleImponibile,
         iva,
         totale,
@@ -300,57 +387,70 @@ async function generateFatturaPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Logo in alto a sinistra (simulato con testo dato che non posso caricare immagine)
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Azienda Agricola Cristina', 20, 20);
+    try {
+        // Carica il logo come immagine
+        const logoImg = await fetch('logo.png').then(res => res.blob());
+        const logoDataUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(logoImg);
+        });
+        
+        // Aggiungi il logo in alto a sinistra
+        doc.addImage(logoDataUrl, 'PNG', 20, 10, 30, 30);
+    } catch (error) {
+        // Se il caricamento dell'immagine fallisce, usa il testo come fallback
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Azienda Agricola Cristina', 20, 20);
+    }
     
     // Riferimenti aziendali sotto il logo
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('P.I. 01920500228', 20, 28);
-    doc.text('via lung\'Adige Luigi Braille, 22', 20, 34);
-    doc.text('38121 Trento', 20, 40);
-    doc.text('Tel. 3333623616', 20, 46);
-    doc.text('stefano.dematte@tiscali.it', 20, 52);
+    doc.text('P.I. 01920500228', 20, 48);
+    doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
+    doc.text('38121 Trento', 20, 60);
+    doc.text('Tel. 3333623616', 20, 66);
+    doc.text('stefano.dematte@tiscali.it', 20, 72);
     
     // Titolo a destra in alto
-    doc.setFontSize(22);
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('FATTURA', 140, 25);
+    doc.text('FATTURA', 120, 25);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`N: ${fattura.numero}`, 140, 35);
-    doc.text(`Data: ${fattura.data}`, 140, 42);
+    doc.text(`N: ${fattura.numero}`, 120, 35);
+    doc.text(`Data: ${fattura.data}`, 120, 42);
     
     // Linea di separazione
-    doc.line(20, 58, 190, 58);
+    doc.line(20, 78, 190, 78);
     
     // Cliente sotto
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('CLIENTE', 20, 68);
+    doc.text('CLIENTE', 20, 88);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 76);
-    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 83);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 90);
-    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 97);
-    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 104);
+    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
+    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
+    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
+    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
     
     // Linea di separazione
-    doc.line(20, 110, 190, 110);
+    doc.line(20, 130, 190, 130);
     
     // DDT inclusi
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DDT INCLUSI', 20, 120);
+    doc.text('DDT INCLUSI', 20, 140);
     
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    let y = 130;
+    let y = 150;
     
     ddtInclusi.forEach(ddt => {
         doc.text(`DDT ${ddt.numero} - Data: ${ddt.data} - Totale: €${ddt.totale}`, 20, y);
@@ -378,18 +478,29 @@ async function generateFatturaPDF(id) {
     doc.setFont('helvetica', 'normal');
     doc.line(20, y - 2, 190, y - 2);
     
-    // Aggrega tutte le righe dai DDT
-    let totaleGenerale = 0;
-    ddtInclusi.forEach(ddt => {
-        ddt.righe.forEach(riga => {
+    // Usa le righe della fattura se disponibili, altrimenti quelle dei DDT
+    const righeDaUsare = fattura.righe || [];
+    
+    if (righeDaUsare.length > 0) {
+        righeDaUsare.forEach(riga => {
             y += 7;
             doc.text(riga.nomeProdotto, 20, y);
             doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
             doc.text(`€${riga.prezzoUnitario}`, 130, y);
             doc.text(`€${riga.totale}`, 160, y);
-            totaleGenerale += parseFloat(riga.totale);
         });
-    });
+    } else {
+        // Fallback alle righe dei DDT (per fatture vecchie)
+        ddtInclusi.forEach(ddt => {
+            ddt.righe.forEach(riga => {
+                y += 7;
+                doc.text(riga.nomeProdotto, 20, y);
+                doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
+                doc.text(`€${riga.prezzoUnitario}`, 130, y);
+                doc.text(`€${riga.totale}`, 160, y);
+            });
+        });
+    }
     
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
