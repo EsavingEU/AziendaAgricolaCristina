@@ -300,6 +300,16 @@ async function generateFatturaPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
+    // Logo e informazioni azienda (in alto a sinistra)
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Azienda Agricola Cristina', 20, 15);
+    doc.text('P.I. 01920500228', 20, 20);
+    doc.text('via lung\'Adige Luigi Braille, 22', 20, 25);
+    doc.text('38121 Trento', 20, 30);
+    doc.text('Tel. 3333623616', 20, 35);
+    doc.text('stefano.dematte@tiscali.it', 20, 40);
+    
     // Header
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
@@ -307,8 +317,8 @@ async function generateFatturaPDF(id) {
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Fattura N: ${fattura.numero}`, 20, 35);
-    doc.text(`Data: ${fattura.data}`, 20, 42);
+    doc.text(`Fattura N: ${fattura.numero}`, 120, 35);
+    doc.text(`Data: ${fattura.data}`, 120, 42);
     
     // Cliente
     doc.setFontSize(14);
@@ -371,15 +381,12 @@ async function generateFatturaPDF(id) {
     y += 10;
     doc.line(20, y - 2, 180, y - 2);
     
-    // Totale
+    // Riepilogo IVA
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`TOTALE: €${totaleGenerale.toFixed(2)}`, 160, y + 10);
-    
-    // Footer
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Azienda Agricola Cristina', 105, 280, { align: 'center' });
+    doc.text(`Imponibile: €${fattura.totaleImponibile || fattura.totale}`, 120, y + 10);
+    doc.text(`IVA (4%): €${fattura.iva || '0.00'}`, 120, y + 17);
+    doc.text(`TOTALE: €${fattura.totale}`, 160, y + 24);
     
     doc.save(`Fattura_${fattura.numero}_${fattura.data}.pdf`);
 }

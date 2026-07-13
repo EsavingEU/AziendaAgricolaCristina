@@ -328,7 +328,7 @@ async function generateDDTPDF(id) {
     doc.setFont('helvetica', 'normal');
     doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 62);
     doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 69);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ′′}) ${cliente.cap || ''}`, 20, 76);
+    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 76);
     doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 83);
     doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 90);
     
