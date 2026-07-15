@@ -360,16 +360,19 @@ async function generateDDTPDF(id) {
         doc.text(riga.nomeProdotto, 20, y);
         doc.text(`${riga.quantita} ${riga.unitaMisura}`, 140, y);
         
-        // Descrizione sulla riga sottostante
-        y += 5;
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
-        doc.text(riga.nomeProdotto, 20, y);
-        
-        // Torna al font normale
-        y += 5;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
+        // Descrizione sulla riga sottostante (se presente)
+        const prodotto = prodotti.find(p => p.id === riga.prodottoId);
+        if (prodotto && prodotto.descrizione && prodotto.descrizione.trim()) {
+            y += 5;
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'italic');
+            doc.text(prodotto.descrizione, 20, y);
+            
+            // Torna al font normale
+            y += 5;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+        }
     });
     
     y += 10;
