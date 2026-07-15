@@ -9,6 +9,13 @@ const clienteModal = document.getElementById('cliente-modal');
 const clienteForm = document.getElementById('cliente-form');
 const clienteModalTitle = document.getElementById('cliente-modal-title');
 
+// Check authentication
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = 'index.html';
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadClienti();

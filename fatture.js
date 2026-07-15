@@ -16,6 +16,13 @@ const fatturaClienteSelect = document.getElementById('fattura-cliente');
 const fatturaDDTContainer = document.getElementById('fattura-ddt-container');
 const fatturaYearFilter = document.getElementById('fattura-year-filter');
 
+// Check authentication
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = 'index.html';
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     populateYearFilter();

@@ -9,26 +9,22 @@ const loginError = document.getElementById('login-error');
 const logoutBtn = document.getElementById('logout-btn');
 const menuButtons = document.querySelectorAll('.menu-btn');
 
-// Authentication
-const CREDENTIALS = {
-    email: 'admin@azienda.it',
-    password: 'admin123'
-};
-
 // Initialize App
 function initApp() {
-    checkAuth();
     setupEventListeners();
+    setupAuthListener();
 }
 
-function checkAuth() {
-    const savedUser = localStorage.getItem('aziendaUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        showMainSection();
-    } else {
-        showLoginSection();
-    }
+function setupAuthListener() {
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            currentUser = user;
+            showMainSection();
+        } else {
+            currentUser = null;
+            showLoginSection();
+        }
+    });
 }
 
 function showLoginSection() {
@@ -60,20 +56,42 @@ function handleLogin(e) {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
-    if (email === CREDENTIALS.email && password === CREDENTIALS.password) {
-        currentUser = { email };
-        localStorage.setItem('aziendaUser', JSON.stringify(currentUser));
-        loginError.textContent = '';
-        showMainSection();
-    } else {
-        loginError.textContent = 'Credenziali non valide';
-    }
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            // Login successful
+            currentUser = userCredential.user;
+            loginError.textContent = '';
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error('Login error:', errorCode, errorMessage);
+            
+            // User friendly error messages
+            if (errorCode === 'auth/user-not-found') {
+                loginError.textContent = 'Utente non trovato';
+            } else if (errorCode === 'auth/wrong-password') {
+                loginError.textContent = 'Password errata';
+            } else if (errorCode === 'auth/invalid-email') {
+                loginError.textContent = 'Email non valida';
+            } else if (errorCode === 'auth/invalid-credential') {
+                loginError.textContent = 'Credenziali non valide';
+            } else {
+                loginError.textContent = 'Errore durante il login: ' + errorMessage;
+            }
+        });
 }
 
 function handleLogout() {
-    currentUser = null;
-    localStorage.removeItem('aziendaUser');
-    showLoginSection();
+    firebase.auth().signOut()
+        .then(() => {
+            // Logout successful
+            currentUser = null;
+        })
+        .catch((error) => {
+            console.error('Logout error:', error);
+            alert('Errore durante il logout');
+        });
 }
 
 function handleMenuClick(e) {

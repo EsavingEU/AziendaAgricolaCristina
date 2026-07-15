@@ -17,6 +17,13 @@ const ddtRigheContainer = document.getElementById('ddt-righe-container');
 const ddtArticoloSelect = document.getElementById('ddt-articolo-select');
 const ddtYearFilter = document.getElementById('ddt-year-filter');
 
+// Check authentication
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = 'index.html';
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     populateYearFilter();

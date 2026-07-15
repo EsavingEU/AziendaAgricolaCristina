@@ -9,6 +9,13 @@ const articoloModal = document.getElementById('articolo-modal');
 const articoloForm = document.getElementById('articolo-form');
 const articoloModalTitle = document.getElementById('articolo-modal-title');
 
+// Check authentication
+firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+        window.location.href = 'index.html';
+    }
+});
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadArticoli();
