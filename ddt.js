@@ -348,8 +348,7 @@ async function generateDDTPDF(id) {
     let y = 150;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('Codice', 20, y);
-    doc.text('Descrizione', 60, y);
+    doc.text('Articolo', 20, y);
     doc.text('Quantità', 140, y);
     
     y += 8;
@@ -358,9 +357,19 @@ async function generateDDTPDF(id) {
     
     ddtItem.righe.forEach(riga => {
         y += 7;
-        doc.text(riga.prodottoId || '-', 20, y);
-        doc.text(riga.nomeProdotto, 60, y);
+        doc.text(riga.nomeProdotto, 20, y);
         doc.text(`${riga.quantita} ${riga.unitaMisura}`, 140, y);
+        
+        // Descrizione sulla riga sottostante
+        y += 5;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text(riga.nomeProdotto, 20, y);
+        
+        // Torna al font normale
+        y += 5;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
     });
     
     y += 10;

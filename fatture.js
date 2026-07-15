@@ -443,55 +443,73 @@ async function generateFatturaPDF(id) {
     // Linea di separazione
     doc.line(20, 130, 190, 130);
     
-    // DDT inclusi
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DDT INCLUSI', 20, 140);
+    // Tabella articoli divisi per DDT
+    let y = 140;
     
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    let y = 150;
-    
-    ddtInclusi.forEach(ddt => {
-        doc.text(`DDT ${ddt.numero} - Data: ${ddt.data} - Totale: €${ddt.totale}`, 20, y);
-        y += 7;
+    // Ordina i DDT inclusi per numero in ordine crescente
+    ddtInclusi.sort((a, b) => {
+        const numA = parseInt(a.numero) || 0;
+        const numB = parseInt(b.numero) || 0;
+        return numA - numB;
     });
-    
-    // Linea di separazione
-    doc.line(20, y + 2, 190, y + 2);
-    
-    // Tabella articoli
-    y += 10;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ARTICOLI', 20, y);
-    
-    y += 10;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Articolo', 20, y);
-    doc.text('Quantità', 100, y);
-    doc.text('Prezzo', 130, y);
-    doc.text('Totale', 160, y);
-    
-    y += 8;
-    doc.setFont('helvetica', 'normal');
-    doc.line(20, y - 2, 190, y - 2);
     
     // Usa le righe della fattura se disponibili, altrimenti quelle dei DDT
     const righeDaUsare = fattura.righe || [];
     
     if (righeDaUsare.length > 0) {
-        righeDaUsare.forEach(riga => {
-            y += 7;
-            doc.text(riga.nomeProdotto, 20, y);
-            doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
-            doc.text(`€${riga.prezzoUnitario}`, 130, y);
-            doc.text(`€${riga.totale}`, 160, y);
+        // Raggruppa le righe per DDT
+        ddtInclusi.forEach(ddt => {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`DDT ${ddt.numero} - ${ddt.data}`, 20, y);
+            y += 8;
+            
+            const righeDDT = righeDaUsare.filter(riga => riga.ddtId === ddt.id);
+            
+            // Intestazione tabella articoli
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Articolo', 20, y);
+            doc.text('Quantità', 100, y);
+            doc.text('Prezzo', 130, y);
+            doc.text('Totale', 160, y);
+            
+            y += 8;
+            doc.setFont('helvetica', 'normal');
+            doc.line(20, y - 2, 190, y - 2);
+            
+            righeDDT.forEach(riga => {
+                y += 7;
+                doc.text(riga.nomeProdotto, 20, y);
+                doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
+                doc.text(`€${riga.prezzoUnitario}`, 130, y);
+                doc.text(`€${riga.totale}`, 160, y);
+            });
+            
+            y += 10;
+            doc.line(20, y - 2, 190, y - 2);
+            y += 5;
         });
     } else {
         // Fallback alle righe dei DDT (per fatture vecchie)
         ddtInclusi.forEach(ddt => {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`DDT ${ddt.numero} - ${ddt.data}`, 20, y);
+            y += 8;
+            
+            // Intestazione tabella articoli
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Articolo', 20, y);
+            doc.text('Quantità', 100, y);
+            doc.text('Prezzo', 130, y);
+            doc.text('Totale', 160, y);
+            
+            y += 8;
+            doc.setFont('helvetica', 'normal');
+            doc.line(20, y - 2, 190, y - 2);
+            
             ddt.righe.forEach(riga => {
                 y += 7;
                 doc.text(riga.nomeProdotto, 20, y);
@@ -499,6 +517,10 @@ async function generateFatturaPDF(id) {
                 doc.text(`€${riga.prezzoUnitario}`, 130, y);
                 doc.text(`€${riga.totale}`, 160, y);
             });
+            
+            y += 10;
+            doc.line(20, y - 2, 190, y - 2);
+            y += 5;
         });
     }
     
