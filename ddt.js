@@ -119,7 +119,7 @@ function renderDDT() {
     }
     
     if (ddtToRender.length === 0) {
-        ddtTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nessun DDT presente</td></tr>';
+        ddtTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nessun DDT presente</td></tr>';
         return;
     }
 
@@ -130,9 +130,6 @@ function renderDDT() {
                 <td>${ddtItem.numero || ddtItem.id.slice(0, 8)}...</td>
                 <td>${ddtItem.data}</td>
                 <td>${cliente?.ragioneSociale || '-'}</td>
-                <td>€${ddtItem.totaleImponibile || ddtItem.totale}</td>
-                <td>€${ddtItem.iva || '0.00'}</td>
-                <td>€${ddtItem.totale}</td>
                 <td>${ddtItem.fatturato ? 'Fatturato' : 'Non Fatturato'}</td>
                 <td>
                     <button class="action-btn edit-btn" onclick="editDDT('${ddtItem.id}')">Modifica</button>
@@ -231,17 +228,10 @@ async function handleDDTSubmit(e) {
         return;
     }
     
-    const totaleImponibile = ddtRighe.reduce((sum, riga) => sum + parseFloat(riga.totale), 0);
-    const iva = totaleImponibile * 0.04;
-    const totale = totaleImponibile + iva;
-    
     const ddtData = {
         clienteId: document.getElementById('ddt-cliente').value,
         data: document.getElementById('ddt-data').value,
         righe: ddtRighe,
-        totaleImponibile,
-        iva,
-        totale,
         fatturato: false,
         createdAt: new Date()
     };
@@ -358,10 +348,9 @@ async function generateDDTPDF(id) {
     let y = 150;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('Articolo', 20, y);
-    doc.text('Quantità', 100, y);
-    doc.text('Prezzo', 130, y);
-    doc.text('Totale', 160, y);
+    doc.text('Codice', 20, y);
+    doc.text('Descrizione', 60, y);
+    doc.text('Quantità', 140, y);
     
     y += 8;
     doc.setFont('helvetica', 'normal');
@@ -369,21 +358,13 @@ async function generateDDTPDF(id) {
     
     ddtItem.righe.forEach(riga => {
         y += 7;
-        doc.text(riga.nomeProdotto, 20, y);
-        doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
-        doc.text(`€${riga.prezzoUnitario}`, 130, y);
-        doc.text(`€${riga.totale}`, 160, y);
+        doc.text(riga.prodottoId || '-', 20, y);
+        doc.text(riga.nomeProdotto, 60, y);
+        doc.text(`${riga.quantita} ${riga.unitaMisura}`, 140, y);
     });
     
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
-    
-    // Riepilogo IVA
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Imponibile: €${ddtItem.totaleImponibile || ddtItem.totale}`, 120, y + 10);
-    doc.text(`IVA (4%): €${ddtItem.iva || '0.00'}`, 120, y + 17);
-    doc.text(`TOTALE: €${ddtItem.totale}`, 160, y + 24);
     
     doc.save(`DDT_${ddtItem.numero}_${ddtItem.data}.pdf`);
 }
