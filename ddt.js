@@ -177,7 +177,11 @@ function openDDTModal(ddtItem = null) {
         document.getElementById('ddt-cliente').value = ddtItem.clienteId;
         document.getElementById('ddt-data').value = ddtItem.data;
         document.getElementById('ddt-destinazione-diversa').checked = ddtItem.destinazioneDiversa || false;
+        document.getElementById('ddt-destinazione-luogo').value = ddtItem.destinazioneLuogo || '';
         document.getElementById('ddt-destinazione-indirizzo').value = ddtItem.destinazioneIndirizzo || '';
+        document.getElementById('ddt-destinazione-cap').value = ddtItem.destinazioneCap || '';
+        document.getElementById('ddt-destinazione-comune').value = ddtItem.destinazioneComune || '';
+        document.getElementById('ddt-destinazione-provincia').value = ddtItem.destinazioneProvincia || '';
         document.getElementById('ddt-imballaggio').value = ddtItem.imballaggio || '';
         document.getElementById('ddt-vettore').value = ddtItem.vettore || '';
         document.getElementById('ddt-porto').value = ddtItem.porto || '';
@@ -264,7 +268,11 @@ async function handleDDTSubmit(e) {
         fatturato: false,
         createdAt: new Date(),
         destinazioneDiversa: document.getElementById('ddt-destinazione-diversa').checked,
+        destinazioneLuogo: document.getElementById('ddt-destinazione-luogo').value || '',
         destinazioneIndirizzo: document.getElementById('ddt-destinazione-indirizzo').value || '',
+        destinazioneCap: document.getElementById('ddt-destinazione-cap').value || '',
+        destinazioneComune: document.getElementById('ddt-destinazione-comune').value || '',
+        destinazioneProvincia: document.getElementById('ddt-destinazione-provincia').value || '',
         imballaggio: document.getElementById('ddt-imballaggio').value || '',
         vettore: document.getElementById('ddt-vettore').value || '',
         porto: document.getElementById('ddt-porto').value || '',
@@ -315,6 +323,10 @@ async function generateDDTPDF(id) {
     const cliente = clienti.find(c => c.id === ddtItem.clienteId);
     if (!cliente) return;
     
+    // Carica i prodotti per avere accesso al peso
+    const prodottiSnapshot = await db.collection('prodotti').get();
+    const prodottiData = prodottiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
@@ -359,7 +371,7 @@ async function generateDDTPDF(id) {
     // Linea di separazione
     doc.line(20, 78, 190, 78);
     
-    // DESTINATARIO
+    // DESTINATARIO (a sinistra)
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('DESTINATARIO', 20, 88);
@@ -373,29 +385,37 @@ async function generateDDTPDF(id) {
     doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
     doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
     
-    // DESTINAZIONE
+    // DESTINAZIONE (a destra)
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('DESTINAZIONE', 20, 143);
+    doc.text('DESTINAZIONE', 110, 88);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    if (ddtItem.destinazioneDiversa && ddtItem.destinazioneIndirizzo) {
-        doc.text(ddtItem.destinazioneIndirizzo, 20, 151);
+    if (ddtItem.destinazioneDiversa) {
+        if (ddtItem.destinazioneLuogo) {
+            doc.text(`Luogo: ${ddtItem.destinazioneLuogo}`, 110, 96);
+        }
+        if (ddtItem.destinazioneIndirizzo) {
+            doc.text(`Indirizzo: ${ddtItem.destinazioneIndirizzo}`, 110, 103);
+        }
+        if (ddtItem.destinazioneCap || ddtItem.destinazioneComune || ddtItem.destinazioneProvincia) {
+            doc.text(`${ddtItem.destinazioneCap || ''} ${ddtItem.destinazioneComune || ''} (${ddtItem.destinazioneProvincia || ''})`, 110, 110);
+        }
     } else {
-        doc.text(`${cliente.indirizzo || '-'}`, 20, 151);
-        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 158);
+        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 110, 96);
+        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 110, 103);
     }
     
     // Linea di separazione
-    doc.line(20, 165, 190, 165);
+    doc.line(20, 140, 190, 140);
     
     // Tabella articoli
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('ARTICOLI', 20, 175);
+    doc.text('ARTICOLI', 20, 150);
     
-    let y = 185;
+    let y = 160;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Articolo', 20, y);
@@ -447,7 +467,7 @@ async function generateDDTPDF(id) {
     // Calcola KG NETTI (somma dei pesi degli articoli)
     let kgNetti = 0;
     ddtItem.righe.forEach(riga => {
-        const prodotto = prodotti.find(p => p.id === riga.prodottoId);
+        const prodotto = prodottiData.find(p => p.id === riga.prodottoId);
         if (prodotto && prodotto.peso) {
             kgNetti += prodotto.peso * riga.quantita;
         }
