@@ -54,6 +54,16 @@ function setupEventListeners() {
     addDDTBtn.addEventListener('click', () => openDDTModal());
     ddtForm.addEventListener('submit', handleDDTSubmit);
     ddtArticoloSelect.addEventListener('change', handleArticoloChange);
+    
+    // Gestione checkbox destinazione diversa
+    const destinazioneDiversaCheckbox = document.getElementById('ddt-destinazione-diversa');
+    const destinazioneContainer = document.getElementById('ddt-destinazione-container');
+    
+    if (destinazioneDiversaCheckbox && destinazioneContainer) {
+        destinazioneDiversaCheckbox.addEventListener('change', (e) => {
+            destinazioneContainer.style.display = e.target.checked ? 'block' : 'none';
+        });
+    }
 }
 
 function handleArticoloChange() {
@@ -166,9 +176,21 @@ function openDDTModal(ddtItem = null) {
     if (ddtItem) {
         document.getElementById('ddt-cliente').value = ddtItem.clienteId;
         document.getElementById('ddt-data').value = ddtItem.data;
+        document.getElementById('ddt-destinazione-diversa').checked = ddtItem.destinazioneDiversa || false;
+        document.getElementById('ddt-destinazione-indirizzo').value = ddtItem.destinazioneIndirizzo || '';
+        document.getElementById('ddt-imballaggio').value = ddtItem.imballaggio || '';
+        document.getElementById('ddt-vettore').value = ddtItem.vettore || '';
+        document.getElementById('ddt-porto').value = ddtItem.porto || '';
+        document.getElementById('ddt-numero-colli').value = ddtItem.numeroColli || '';
+        
+        // Mostra/nascondi campo destinazione in base alla checkbox
+        const destinazioneContainer = document.getElementById('ddt-destinazione-container');
+        destinazioneContainer.style.display = ddtItem.destinazioneDiversa ? 'block' : 'none';
     } else {
         document.getElementById('ddt-data').value = new Date().toISOString().split('T')[0];
         ddtForm.reset();
+        const destinazioneContainer = document.getElementById('ddt-destinazione-container');
+        destinazioneContainer.style.display = 'none';
     }
     
     renderDDTRighe();
@@ -240,7 +262,13 @@ async function handleDDTSubmit(e) {
         data: document.getElementById('ddt-data').value,
         righe: ddtRighe,
         fatturato: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        destinazioneDiversa: document.getElementById('ddt-destinazione-diversa').checked,
+        destinazioneIndirizzo: document.getElementById('ddt-destinazione-indirizzo').value || '',
+        imballaggio: document.getElementById('ddt-imballaggio').value || '',
+        vettore: document.getElementById('ddt-vettore').value || '',
+        porto: document.getElementById('ddt-porto').value || '',
+        numeroColli: parseInt(document.getElementById('ddt-numero-colli').value) || 0
     };
 
     try {
@@ -331,7 +359,7 @@ async function generateDDTPDF(id) {
     // Linea di separazione
     doc.line(20, 78, 190, 78);
     
-    // Cliente sotto
+    // DESTINATARIO
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('DESTINATARIO', 20, 88);
@@ -343,16 +371,31 @@ async function generateDDTPDF(id) {
     doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
     doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
     doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
+    doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
+    
+    // DESTINAZIONE
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DESTINAZIONE', 20, 143);
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    if (ddtItem.destinazioneDiversa && ddtItem.destinazioneIndirizzo) {
+        doc.text(ddtItem.destinazioneIndirizzo, 20, 151);
+    } else {
+        doc.text(`${cliente.indirizzo || '-'}`, 20, 151);
+        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 158);
+    }
     
     // Linea di separazione
-    doc.line(20, 130, 190, 130);
+    doc.line(20, 165, 190, 165);
     
     // Tabella articoli
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('ARTICOLI', 20, 140);
+    doc.text('ARTICOLI', 20, 175);
     
-    let y = 150;
+    let y = 185;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Articolo', 20, y);
@@ -384,6 +427,72 @@ async function generateDDTPDF(id) {
     
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
+    
+    // Causale di trasporto
+    y += 10;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Causale di trasporto: VENDITA', 20, y);
+    
+    // Tipo imballaggio
+    if (ddtItem.imballaggio) {
+        y += 7;
+        doc.text(`Tipo imballaggio: ${ddtItem.imballaggio}`, 20, y);
+    }
+    
+    // Tabella fondo
+    y += 15;
+    doc.line(20, y - 2, 190, y - 2);
+    
+    // Calcola KG NETTI (somma dei pesi degli articoli)
+    let kgNetti = 0;
+    ddtItem.righe.forEach(riga => {
+        const prodotto = prodotti.find(p => p.id === riga.prodottoId);
+        if (prodotto && prodotto.peso) {
+            kgNetti += prodotto.peso * riga.quantita;
+        }
+    });
+    
+    // Calcola KG LORDI (kg netti + 0.5 * numero colli se cassetta di legno)
+    let kgLordi = kgNetti;
+    if (ddtItem.imballaggio === 'cassetta di legno' && ddtItem.numeroColli) {
+        kgLordi += 0.5 * ddtItem.numeroColli;
+    }
+    
+    // Tabella informazioni trasporto
+    const tableY = y + 10;
+    const col1X = 20;
+    const col2X = 70;
+    const col3X = 120;
+    const col4X = 150;
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Vettore:', col1X, tableY);
+    doc.text('Porto:', col2X, tableY);
+    doc.text('N. Colli:', col3X, tableY);
+    doc.text('KG Netti:', col4X, tableY);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(ddtItem.vettore || '-', col1X, tableY + 6);
+    doc.text(ddtItem.porto || '-', col2X, tableY + 6);
+    doc.text(ddtItem.numeroColli?.toString() || '-', col3X, tableY + 6);
+    doc.text(kgNetti.toFixed(2), col4X, tableY + 6);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('KG Lordi:', col4X, tableY + 12);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(kgLordi.toFixed(2), col4X, tableY + 18);
+    
+    // Firme
+    const firmeY = tableY + 30;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Firma Vettore:', col1X, firmeY);
+    doc.text('Firma Ricevente:', col3X, firmeY);
+    
+    doc.line(col1X, firmeY + 5, col1X + 40, firmeY + 5);
+    doc.line(col3X, firmeY + 5, col3X + 40, firmeY + 5);
     
     doc.save(`DDT_${ddtItem.numero}_${ddtItem.data}.pdf`);
 }

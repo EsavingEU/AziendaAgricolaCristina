@@ -65,6 +65,7 @@ function openArticoloModal(articolo = null) {
         document.getElementById('articolo-nome').value = articolo.nome;
         document.getElementById('articolo-descrizione').value = articolo.descrizione;
         document.getElementById('articolo-unita').value = articolo.unitaMisura;
+        document.getElementById('articolo-peso').value = articolo.peso || '';
     } else {
         articoloForm.reset();
     }
@@ -84,7 +85,8 @@ async function handleArticoloSubmit(e) {
     const articoloData = {
         nome: document.getElementById('articolo-nome').value,
         descrizione: document.getElementById('articolo-descrizione').value,
-        unitaMisura: document.getElementById('articolo-unita').value
+        unitaMisura: document.getElementById('articolo-unita').value,
+        peso: parseFloat(document.getElementById('articolo-peso').value) || 0
     };
 
     try {

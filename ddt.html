@@ -55,6 +55,44 @@
                 <label>Data</label>
                 <input type="date" id="ddt-data" required>
                 
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="ddt-destinazione-diversa" style="margin-right: 10px;">
+                    Destinazione diversa dall'indirizzo del cliente
+                </label>
+                
+                <div id="ddt-destinazione-container" style="display: none;">
+                    <label>Indirizzo Destinazione</label>
+                    <input type="text" id="ddt-destinazione-indirizzo" placeholder="Indirizzo completo">
+                </div>
+                
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+                
+                <label>Tipo Imballaggio</label>
+                <select id="ddt-imballaggio">
+                    <option value="">Seleziona imballaggio</option>
+                    <option value="cassetta di legno">Cassetta di legno</option>
+                    <option value="cassetta di plastica">Cassetta di plastica</option>
+                </select>
+                
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+                
+                <label>Vettore</label>
+                <select id="ddt-vettore">
+                    <option value="">Seleziona vettore</option>
+                    <option value="MITTENTE">Mittente</option>
+                    <option value="DESTINATARIO">Destinatario</option>
+                </select>
+                
+                <label>Porto</label>
+                <select id="ddt-porto">
+                    <option value="">Seleziona porto</option>
+                    <option value="PORTO FRANCO">Porto Franco</option>
+                    <option value="FRANCO MAGAZZINO">Franco Magazzino</option>
+                </select>
+                
+                <label>Numero Colli</label>
+                <input type="number" id="ddt-numero-colli" placeholder="0">
+                
                 <div style="border-top: 1px solid #e0e0e0; margin: 20px 0; padding-top: 20px;">
                     <h4 style="margin-bottom: 15px;">Aggiungi Articoli</h4>
                     <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 10px;">

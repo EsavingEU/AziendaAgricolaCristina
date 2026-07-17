@@ -71,6 +71,7 @@ function openClienteModal(cliente = null) {
         document.getElementById('cliente-email').value = cliente.email || '';
         document.getElementById('cliente-piva').value = cliente.piva || '';
         document.getElementById('cliente-cf').value = cliente.codiceFiscale || '';
+        document.getElementById('cliente-sdi').value = cliente.sdi || '';
     } else {
         clienteForm.reset();
     }
@@ -96,7 +97,8 @@ async function handleClienteSubmit(e) {
         telefono: document.getElementById('cliente-telefono').value,
         email: document.getElementById('cliente-email').value,
         piva: document.getElementById('cliente-piva').value,
-        codiceFiscale: document.getElementById('cliente-cf').value
+        codiceFiscale: document.getElementById('cliente-cf').value,
+        sdi: document.getElementById('cliente-sdi').value
     };
 
     try {
