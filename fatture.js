@@ -18,7 +18,11 @@ const fatturaYearFilter = document.getElementById('fattura-year-filter');
 
 // Check authentication
 firebase.auth().onAuthStateChanged((user) => {
-    if (!user) {
+    if (user) {
+        console.log('Utente autenticato:', user.email);
+        loadData();
+    } else {
+        console.log('Utente non autenticato, reindirizzamento...');
         window.location.href = 'index.html';
     }
 });
@@ -26,7 +30,6 @@ firebase.auth().onAuthStateChanged((user) => {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     populateYearFilter();
-    loadData();
     setupEventListeners();
 });
 
@@ -399,7 +402,7 @@ async function generateFatturaPDF(id) {
     const totalRighe = (fattura.righe || []).length || ddtInclusi.reduce((sum, ddt) => sum + (ddt.righe?.length || 0), 0);
     const totalPages = Math.ceil(totalRighe / 8) + 1;
     
-    const addPageHeader = (pageNum, total) => {
+    const addPageHeader = async (pageNum, total) => {
         try {
             // Carica il logo come immagine
             const logoImg = await fetch('logo.png').then(res => res.blob());
@@ -487,7 +490,7 @@ async function generateFatturaPDF(id) {
     
     if (righeDaUsare.length > 0) {
         // Raggruppa le righe per DDT
-        ddtInclusi.forEach(ddt => {
+        for (const ddt of ddtInclusi) {
             // Controlla se serve nuova pagina
             if (y > 230) {
                 addPageFooter(currentPage, totalPages);
@@ -515,7 +518,7 @@ async function generateFatturaPDF(id) {
             doc.setFont('helvetica', 'normal');
             doc.line(20, y - 2, 190, y - 2);
             
-            righeDDT.forEach(riga => {
+            for (const riga of righeDDT) {
                 // Controlla se serve nuova pagina per ogni riga
                 if (y > 250) {
                     addPageFooter(currentPage, totalPages);
@@ -541,15 +544,15 @@ async function generateFatturaPDF(id) {
                 doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
                 doc.text(`€${riga.prezzoUnitario}`, 130, y);
                 doc.text(`€${riga.totale}`, 160, y);
-            });
+            }
             
             y += 10;
             doc.line(20, y - 2, 190, y - 2);
             y += 5;
-        });
+        }
     } else {
         // Fallback alle righe dei DDT (per fatture vecchie)
-        ddtInclusi.forEach(ddt => {
+        for (const ddt of ddtInclusi) {
             // Controlla se serve nuova pagina
             if (y > 230) {
                 addPageFooter(currentPage, totalPages);
@@ -575,7 +578,7 @@ async function generateFatturaPDF(id) {
             doc.setFont('helvetica', 'normal');
             doc.line(20, y - 2, 190, y - 2);
             
-            ddt.righe.forEach(riga => {
+            for (const riga of ddt.righe) {
                 // Controlla se serve nuova pagina per ogni riga
                 if (y > 250) {
                     addPageFooter(currentPage, totalPages);
@@ -601,12 +604,12 @@ async function generateFatturaPDF(id) {
                 doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
                 doc.text(`€${riga.prezzoUnitario}`, 130, y);
                 doc.text(`€${riga.totale}`, 160, y);
-            });
+            }
             
             y += 10;
             doc.line(20, y - 2, 190, y - 2);
             y += 5;
-        });
+        }
     }
     
     // Controlla se serve nuova pagina per il riepilogo

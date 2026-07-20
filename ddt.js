@@ -19,7 +19,11 @@ const ddtYearFilter = document.getElementById('ddt-year-filter');
 
 // Check authentication
 firebase.auth().onAuthStateChanged((user) => {
-    if (!user) {
+    if (user) {
+        console.log('Utente autenticato:', user.email);
+        loadData();
+    } else {
+        console.log('Utente non autenticato, reindirizzamento...');
         window.location.href = 'index.html';
     }
 });
@@ -27,7 +31,6 @@ firebase.auth().onAuthStateChanged((user) => {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     populateYearFilter();
-    loadData();
     setupEventListeners();
 });
 
@@ -333,7 +336,7 @@ async function generateDDTPDF(id) {
     let currentPage = 1;
     const totalPages = Math.ceil(ddtItem.righe.length / 8) + 1; // Stima pagine
     
-    const addPageHeader = (pageNum, total) => {
+    const addPageHeader = async (pageNum, total) => {
         try {
             // Carica il logo come immagine
             const logoImg = await fetch('logo.png').then(res => res.blob());
@@ -442,7 +445,7 @@ async function generateDDTPDF(id) {
     // Prima pagina
     let y = await addPageHeader(currentPage, totalPages);
     
-    ddtItem.righe.forEach((riga, index) => {
+    for (const riga of ddtItem.righe) {
         // Controlla se serve nuova pagina (limite 250)
         if (y > 250) {
             addPageFooter(currentPage, totalPages);
@@ -468,7 +471,7 @@ async function generateDDTPDF(id) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
         }
-    });
+    }
     
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
