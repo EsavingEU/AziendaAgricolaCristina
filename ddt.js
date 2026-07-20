@@ -464,13 +464,10 @@ async function generateDDTPDF(id) {
     y += 15;
     doc.line(20, y - 2, 190, y - 2);
     
-    // Calcola KG NETTI (somma dei pesi degli articoli)
+    // Calcola KG NETTI (somma delle quantità degli articoli)
     let kgNetti = 0;
     ddtItem.righe.forEach(riga => {
-        const prodotto = prodottiData.find(p => p.id === riga.prodottoId);
-        if (prodotto && prodotto.peso) {
-            kgNetti += prodotto.peso * riga.quantita;
-        }
+        kgNetti += riga.quantita;
     });
     
     // Calcola KG LORDI (kg netti + 0.5 * numero colli se cassetta di legno)
