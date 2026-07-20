@@ -394,70 +394,86 @@ async function generateFatturaPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    try {
-        // Carica il logo come immagine
-        const logoImg = await fetch('logo.png').then(res => res.blob());
-        const logoDataUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(logoImg);
-        });
+    let currentPage = 1;
+    // Stima pagine basata sul numero di righe
+    const totalRighe = (fattura.righe || []).length || ddtInclusi.reduce((sum, ddt) => sum + (ddt.righe?.length || 0), 0);
+    const totalPages = Math.ceil(totalRighe / 8) + 1;
+    
+    const addPageHeader = (pageNum, total) => {
+        try {
+            // Carica il logo come immagine
+            const logoImg = await fetch('logo.png').then(res => res.blob());
+            const logoDataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(logoImg);
+            });
+            
+            // Aggiungi il logo in alto a sinistra
+            doc.addImage(logoDataUrl, 'PNG', 20, 10, 30, 30);
+        } catch (error) {
+            // Se il caricamento dell'immagine fallisce, usa il testo come fallback
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Azienda Agricola Cristina', 20, 20);
+        }
         
-        // Aggiungi il logo in alto a sinistra
-        doc.addImage(logoDataUrl, 'PNG', 20, 10, 30, 30);
-    } catch (error) {
-        // Se il caricamento dell'immagine fallisce, usa il testo come fallback
-        doc.setFontSize(16);
+        // Riferimenti aziendali sotto il logo
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('P.I. 01920500228', 20, 48);
+        doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
+        doc.text('38121 Trento', 20, 60);
+        doc.text('Tel. 3333623616', 20, 66);
+        doc.text('stefano.dematte@tiscali.it', 20, 72);
+        
+        // IBAN in grassetto
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Azienda Agricola Cristina', 20, 20);
-    }
+        doc.text('IBAN: IT16H0200801820000027285503', 20, 80);
+        
+        // Titolo a destra in alto
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('FATTURA', 120, 25);
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`N: ${fattura.numero}`, 120, 35);
+        doc.text(`Data: ${fattura.data}`, 120, 42);
+        
+        // Linea di separazione
+        doc.line(20, 78, 190, 78);
+        
+        // Cliente sotto
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('CLIENTE', 20, 88);
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
+        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
+        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
+        doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
+        doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
+        doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
+        
+        // Linea di separazione
+        doc.line(20, 137, 190, 137);
+        
+        return 140;
+    };
     
-    // Riferimenti aziendali sotto il logo
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('P.I. 01920500228', 20, 48);
-    doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
-    doc.text('38121 Trento', 20, 60);
-    doc.text('Tel. 3333623616', 20, 66);
-    doc.text('stefano.dematte@tiscali.it', 20, 72);
+    const addPageFooter = (pageNum, total) => {
+        // Numerazione pagina in basso al centro
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`pag. ${pageNum}/${total}`, 105, 285, { align: 'center' });
+    };
     
-    // IBAN in grassetto
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('IBAN: IT16H0200801820000027285503', 20, 80);
-    
-    // Titolo a destra in alto
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FATTURA', 120, 25);
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`N: ${fattura.numero}`, 120, 35);
-    doc.text(`Data: ${fattura.data}`, 120, 42);
-    
-    // Linea di separazione
-    doc.line(20, 78, 190, 78);
-    
-    // Cliente sotto
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CLIENTE', 20, 88);
-    
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
-    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
-    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
-    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
-    doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
-    
-    // Linea di separazione
-    doc.line(20, 137, 190, 137);
-    
-    // Tabella articoli divisi per DDT
-    let y = 140;
+    // Prima pagina
+    let y = await addPageHeader(currentPage, totalPages);
     
     // Ordina i DDT inclusi per numero in ordine crescente
     ddtInclusi.sort((a, b) => {
@@ -472,6 +488,14 @@ async function generateFatturaPDF(id) {
     if (righeDaUsare.length > 0) {
         // Raggruppa le righe per DDT
         ddtInclusi.forEach(ddt => {
+            // Controlla se serve nuova pagina
+            if (y > 230) {
+                addPageFooter(currentPage, totalPages);
+                doc.addPage();
+                currentPage++;
+                y = await addPageHeader(currentPage, totalPages);
+            }
+            
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`DDT ${ddt.numero} - ${ddt.data}`, 20, y);
@@ -492,6 +516,26 @@ async function generateFatturaPDF(id) {
             doc.line(20, y - 2, 190, y - 2);
             
             righeDDT.forEach(riga => {
+                // Controlla se serve nuova pagina per ogni riga
+                if (y > 250) {
+                    addPageFooter(currentPage, totalPages);
+                    doc.addPage();
+                    currentPage++;
+                    y = await addPageHeader(currentPage, totalPages);
+                    
+                    // Ripeti intestazione tabella
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Articolo', 20, y);
+                    doc.text('Quantità', 100, y);
+                    doc.text('Prezzo', 130, y);
+                    doc.text('Totale', 160, y);
+                    
+                    y += 8;
+                    doc.setFont('helvetica', 'normal');
+                    doc.line(20, y - 2, 190, y - 2);
+                }
+                
                 y += 7;
                 doc.text(riga.nomeProdotto, 20, y);
                 doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
@@ -506,6 +550,14 @@ async function generateFatturaPDF(id) {
     } else {
         // Fallback alle righe dei DDT (per fatture vecchie)
         ddtInclusi.forEach(ddt => {
+            // Controlla se serve nuova pagina
+            if (y > 230) {
+                addPageFooter(currentPage, totalPages);
+                doc.addPage();
+                currentPage++;
+                y = await addPageHeader(currentPage, totalPages);
+            }
+            
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`DDT ${ddt.numero} - ${ddt.data}`, 20, y);
@@ -524,6 +576,26 @@ async function generateFatturaPDF(id) {
             doc.line(20, y - 2, 190, y - 2);
             
             ddt.righe.forEach(riga => {
+                // Controlla se serve nuova pagina per ogni riga
+                if (y > 250) {
+                    addPageFooter(currentPage, totalPages);
+                    doc.addPage();
+                    currentPage++;
+                    y = await addPageHeader(currentPage, totalPages);
+                    
+                    // Ripeti intestazione tabella
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Articolo', 20, y);
+                    doc.text('Quantità', 100, y);
+                    doc.text('Prezzo', 130, y);
+                    doc.text('Totale', 160, y);
+                    
+                    y += 8;
+                    doc.setFont('helvetica', 'normal');
+                    doc.line(20, y - 2, 190, y - 2);
+                }
+                
                 y += 7;
                 doc.text(riga.nomeProdotto, 20, y);
                 doc.text(`${riga.quantita} ${riga.unitaMisura}`, 100, y);
@@ -537,6 +609,14 @@ async function generateFatturaPDF(id) {
         });
     }
     
+    // Controlla se serve nuova pagina per il riepilogo
+    if (y > 230) {
+        addPageFooter(currentPage, totalPages);
+        doc.addPage();
+        currentPage++;
+        y = 20;
+    }
+    
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
     
@@ -546,6 +626,9 @@ async function generateFatturaPDF(id) {
     doc.text(`Imponibile: €${fattura.totaleImponibile || fattura.totale}`, 120, y + 10);
     doc.text(`IVA (4%): €${fattura.iva || '0.00'}`, 120, y + 17);
     doc.text(`TOTALE: €${fattura.totale}`, 160, y + 24);
+    
+    // Footer ultima pagina
+    addPageFooter(currentPage, totalPages);
     
     doc.save(`Fattura_${fattura.numero}_${fattura.data}.pdf`);
 }

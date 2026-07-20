@@ -330,108 +330,133 @@ async function generateDDTPDF(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    try {
-        // Carica il logo come immagine
-        const logoImg = await fetch('logo.png').then(res => res.blob());
-        const logoDataUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(logoImg);
-        });
+    let currentPage = 1;
+    const totalPages = Math.ceil(ddtItem.righe.length / 8) + 1; // Stima pagine
+    
+    const addPageHeader = (pageNum, total) => {
+        try {
+            // Carica il logo come immagine
+            const logoImg = await fetch('logo.png').then(res => res.blob());
+            const logoDataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(logoImg);
+            });
+            
+            // Aggiungi il logo in alto a sinistra
+            doc.addImage(logoDataUrl, 'PNG', 20, 10, 30, 30);
+        } catch (error) {
+            // Se il caricamento dell'immagine fallisce, usa il testo come fallback
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Azienda Agricola Cristina', 20, 20);
+        }
         
-        // Aggiungi il logo in alto a sinistra
-        doc.addImage(logoDataUrl, 'PNG', 20, 10, 30, 30);
-    } catch (error) {
-        // Se il caricamento dell'immagine fallisce, usa il testo come fallback
-        doc.setFontSize(16);
+        // Riferimenti aziendali sotto il logo
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('P.I. 01920500228', 20, 48);
+        doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
+        doc.text('38121 Trento', 20, 60);
+        doc.text('Tel. 3333623616', 20, 66);
+        doc.text('stefano.dematte@tiscali.it', 20, 72);
+        
+        // Titolo a destra in alto
+        doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('Azienda Agricola Cristina', 20, 20);
-    }
-    
-    // Riferimenti aziendali sotto il logo
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('P.I. 01920500228', 20, 48);
-    doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
-    doc.text('38121 Trento', 20, 60);
-    doc.text('Tel. 3333623616', 20, 66);
-    doc.text('stefano.dematte@tiscali.it', 20, 72);
-    
-    // Titolo a destra in alto
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DOCUMENTO', 120, 25);
-    doc.text('DI TRASPORTO', 120, 32);
-    
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`N: ${ddtItem.numero}`, 120, 42);
-    doc.text(`Data: ${ddtItem.data}`, 120, 49);
-    
-    // Linea di separazione
-    doc.line(20, 78, 190, 78);
-    
-    // DESTINATARIO (a sinistra)
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DESTINATARIO', 20, 88);
-    
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
-    doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
-    doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
-    doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
-    doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
-    doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
-    
-    // DESTINAZIONE (a destra)
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DESTINAZIONE', 110, 88);
-    
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    if (ddtItem.destinazioneDiversa) {
-        if (ddtItem.destinazioneLuogo) {
-            doc.text(`Luogo: ${ddtItem.destinazioneLuogo}`, 110, 96);
+        doc.text('DOCUMENTO', 120, 25);
+        doc.text('DI TRASPORTO', 120, 32);
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`N: ${ddtItem.numero}`, 120, 42);
+        doc.text(`Data: ${ddtItem.data}`, 120, 49);
+        
+        // Linea di separazione
+        doc.line(20, 78, 190, 78);
+        
+        // DESTINATARIO (a sinistra)
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('DESTINATARIO', 20, 88);
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
+        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
+        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
+        doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
+        doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
+        doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
+        
+        // DESTINAZIONE (a destra)
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('DESTINAZIONE', 110, 88);
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        if (ddtItem.destinazioneDiversa) {
+            if (ddtItem.destinazioneLuogo) {
+                doc.text(`Luogo: ${ddtItem.destinazioneLuogo}`, 110, 96);
+            }
+            if (ddtItem.destinazioneIndirizzo) {
+                doc.text(`Indirizzo: ${ddtItem.destinazioneIndirizzo}`, 110, 103);
+            }
+            if (ddtItem.destinazioneCap || ddtItem.destinazioneComune || ddtItem.destinazioneProvincia) {
+                doc.text(`${ddtItem.destinazioneCap || ''} ${ddtItem.destinazioneComune || ''} (${ddtItem.destinazioneProvincia || ''})`, 110, 110);
+            }
+        } else {
+            doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 110, 96);
+            doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 110, 103);
         }
-        if (ddtItem.destinazioneIndirizzo) {
-            doc.text(`Indirizzo: ${ddtItem.destinazioneIndirizzo}`, 110, 103);
+        
+        // Linea di separazione
+        doc.line(20, 140, 190, 140);
+        
+        // Tabella articoli
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('ARTICOLI', 20, 150);
+        
+        let y = 160;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Articolo', 20, y);
+        doc.text('Quantità', 140, y);
+        
+        y += 8;
+        doc.setFont('helvetica', 'normal');
+        doc.line(20, y - 2, 190, y - 2);
+        
+        return y;
+    };
+    
+    const addPageFooter = (pageNum, total) => {
+        // Numerazione pagina in basso al centro
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`pag. ${pageNum}/${total}`, 105, 285, { align: 'center' });
+    };
+    
+    // Prima pagina
+    let y = await addPageHeader(currentPage, totalPages);
+    
+    ddtItem.righe.forEach((riga, index) => {
+        // Controlla se serve nuova pagina (limite 250)
+        if (y > 250) {
+            addPageFooter(currentPage, totalPages);
+            doc.addPage();
+            currentPage++;
+            y = await addPageHeader(currentPage, totalPages);
         }
-        if (ddtItem.destinazioneCap || ddtItem.destinazioneComune || ddtItem.destinazioneProvincia) {
-            doc.text(`${ddtItem.destinazioneCap || ''} ${ddtItem.destinazioneComune || ''} (${ddtItem.destinazioneProvincia || ''})`, 110, 110);
-        }
-    } else {
-        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 110, 96);
-        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 110, 103);
-    }
-    
-    // Linea di separazione
-    doc.line(20, 140, 190, 140);
-    
-    // Tabella articoli
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ARTICOLI', 20, 150);
-    
-    let y = 160;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Articolo', 20, y);
-    doc.text('Quantità', 140, y);
-    
-    y += 8;
-    doc.setFont('helvetica', 'normal');
-    doc.line(20, y - 2, 190, y - 2);
-    
-    ddtItem.righe.forEach(riga => {
+        
         y += 7;
         doc.text(riga.nomeProdotto, 20, y);
         doc.text(`${riga.quantita} ${riga.unitaMisura}`, 140, y);
         
         // Descrizione sulla riga sottostante (se presente)
-        const prodotto = prodotti.find(p => p.id === riga.prodottoId);
+        const prodotto = prodottiData.find(p => p.id === riga.prodottoId);
         if (prodotto && prodotto.descrizione && prodotto.descrizione.trim()) {
             y += 5;
             doc.setFontSize(9);
@@ -447,6 +472,14 @@ async function generateDDTPDF(id) {
     
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
+    
+    // Controlla se serve nuova pagina per la tabella fondo
+    if (y > 230) {
+        addPageFooter(currentPage, totalPages);
+        doc.addPage();
+        currentPage++;
+        y = 20; // Nuova pagina inizia in alto
+    }
     
     // Causale di trasporto
     y += 10;
@@ -511,6 +544,9 @@ async function generateDDTPDF(id) {
     
     doc.line(col1X, firmeY + 5, col1X + 40, firmeY + 5);
     doc.line(col3X, firmeY + 5, col3X + 40, firmeY + 5);
+    
+    // Footer ultima pagina
+    addPageFooter(currentPage, totalPages);
     
     doc.save(`DDT_${ddtItem.numero}_${ddtItem.data}.pdf`);
 }
