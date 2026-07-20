@@ -144,7 +144,7 @@ function renderDDT() {
         const cliente = clienti.find(c => c.id === ddtItem.clienteId);
         return `
             <tr>
-                <td>${ddtItem.numero || ddtItem.id.slice(0, 8)}...</td>
+                <td>${ddtItem.numero || '-'}</td>
                 <td>${ddtItem.data}</td>
                 <td>${cliente?.ragioneSociale || '-'}</td>
                 <td>${ddtItem.fatturato ? 'Fatturato' : 'Non Fatturato'}</td>
@@ -467,7 +467,8 @@ async function generateDDTPDF(id) {
     // Calcola KG NETTI (somma delle quantità degli articoli)
     let kgNetti = 0;
     ddtItem.righe.forEach(riga => {
-        kgNetti += riga.quantita;
+        const quantita = parseFloat(riga.quantita) || 0;
+        kgNetti += quantita;
     });
     
     // Calcola KG LORDI (kg netti + 0.5 * numero colli se cassetta di legno)
