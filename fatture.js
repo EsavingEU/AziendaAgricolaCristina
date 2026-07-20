@@ -398,11 +398,10 @@ async function generateFatturaPDF(id) {
     const doc = new jsPDF();
     
     let currentPage = 1;
-    // Stima pagine basata sul numero di righe
-    const totalRighe = (fattura.righe || []).length || ddtInclusi.reduce((sum, ddt) => sum + (ddt.righe?.length || 0), 0);
-    const totalPages = Math.ceil(totalRighe / 8) + 1;
+    // Array per memorizzare le posizioni y dove mettere i footer
+    const footerPositions = [];
     
-    const addPageHeader = async (pageNum, total) => {
+    const addPageHeader = async (pageNum) => {
         try {
             // Carica il logo come immagine
             const logoImg = await fetch('logo.png').then(res => res.blob());
@@ -468,15 +467,17 @@ async function generateFatturaPDF(id) {
         return 140;
     };
     
-    const addPageFooter = (pageNum, total) => {
-        // Numerazione pagina in basso al centro
+    const addPageFooter = (pageNum) => {
+        // Memorizza la posizione per aggiornare il footer dopo
+        footerPositions.push({ pageNum });
+        // Numerazione pagina temporanea
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(`pag. ${pageNum}/${total}`, 105, 285, { align: 'center' });
+        doc.text(`pag. ${pageNum}`, 105, 285, { align: 'center' });
     };
     
     // Prima pagina
-    let y = await addPageHeader(currentPage, totalPages);
+    let y = await addPageHeader(currentPage);
     
     // Ordina i DDT inclusi per numero in ordine crescente
     ddtInclusi.sort((a, b) => {
@@ -493,10 +494,10 @@ async function generateFatturaPDF(id) {
         for (const ddt of ddtInclusi) {
             // Controlla se serve nuova pagina
             if (y > 230) {
-                addPageFooter(currentPage, totalPages);
+                addPageFooter(currentPage);
                 doc.addPage();
                 currentPage++;
-                y = await addPageHeader(currentPage, totalPages);
+                y = await addPageHeader(currentPage);
             }
             
             doc.setFontSize(12);
@@ -521,10 +522,10 @@ async function generateFatturaPDF(id) {
             for (const riga of righeDDT) {
                 // Controlla se serve nuova pagina per ogni riga
                 if (y > 250) {
-                    addPageFooter(currentPage, totalPages);
+                    addPageFooter(currentPage);
                     doc.addPage();
                     currentPage++;
-                    y = await addPageHeader(currentPage, totalPages);
+                    y = await addPageHeader(currentPage);
                     
                     // Ripeti intestazione tabella
                     doc.setFontSize(10);
@@ -555,10 +556,10 @@ async function generateFatturaPDF(id) {
         for (const ddt of ddtInclusi) {
             // Controlla se serve nuova pagina
             if (y > 230) {
-                addPageFooter(currentPage, totalPages);
+                addPageFooter(currentPage);
                 doc.addPage();
                 currentPage++;
-                y = await addPageHeader(currentPage, totalPages);
+                y = await addPageHeader(currentPage);
             }
             
             doc.setFontSize(12);
@@ -581,10 +582,10 @@ async function generateFatturaPDF(id) {
             for (const riga of ddt.righe) {
                 // Controlla se serve nuova pagina per ogni riga
                 if (y > 250) {
-                    addPageFooter(currentPage, totalPages);
+                    addPageFooter(currentPage);
                     doc.addPage();
                     currentPage++;
-                    y = await addPageHeader(currentPage, totalPages);
+                    y = await addPageHeader(currentPage);
                     
                     // Ripeti intestazione tabella
                     doc.setFontSize(10);
@@ -614,7 +615,7 @@ async function generateFatturaPDF(id) {
     
     // Controlla se serve nuova pagina per il riepilogo
     if (y > 230) {
-        addPageFooter(currentPage, totalPages);
+        addPageFooter(currentPage);
         doc.addPage();
         currentPage++;
         y = 20;
@@ -631,7 +632,16 @@ async function generateFatturaPDF(id) {
     doc.text(`TOTALE: €${fattura.totale}`, 160, y + 24);
     
     // Footer ultima pagina
-    addPageFooter(currentPage, totalPages);
+    addPageFooter(currentPage);
+    
+    // Aggiorna tutti i footer con il numero totale corretto
+    const totalPages = currentPage;
+    for (let i = 0; i < totalPages; i++) {
+        doc.setPage(i + 1);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`pag. ${i + 1}/${totalPages}`, 105, 285, { align: 'center' });
+    }
     
     doc.save(`Fattura_${fattura.numero}_${fattura.data}.pdf`);
 }

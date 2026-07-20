@@ -334,9 +334,10 @@ async function generateDDTPDF(id) {
     const doc = new jsPDF();
     
     let currentPage = 1;
-    const totalPages = Math.ceil(ddtItem.righe.length / 8) + 1; // Stima pagine
+    // Array per memorizzare le posizioni y dove mettere i footer
+    const footerPositions = [];
     
-    const addPageHeader = async (pageNum, total) => {
+    const addPageHeader = async (pageNum) => {
         try {
             // Carica il logo come immagine
             const logoImg = await fetch('logo.png').then(res => res.blob());
@@ -435,23 +436,25 @@ async function generateDDTPDF(id) {
         return y;
     };
     
-    const addPageFooter = (pageNum, total) => {
-        // Numerazione pagina in basso al centro
+    const addPageFooter = (pageNum) => {
+        // Memorizza la posizione per aggiornare il footer dopo
+        footerPositions.push({ pageNum });
+        // Numerazione pagina temporanea
         doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        doc.text(`pag. ${pageNum}/${total}`, 105, 285, { align: 'center' });
+        doc.text(`pag. ${pageNum}`, 105, 285, { align: 'center' });
     };
     
     // Prima pagina
-    let y = await addPageHeader(currentPage, totalPages);
+    let y = await addPageHeader(currentPage);
     
     for (const riga of ddtItem.righe) {
         // Controlla se serve nuova pagina (limite 250)
         if (y > 250) {
-            addPageFooter(currentPage, totalPages);
+            addPageFooter(currentPage);
             doc.addPage();
             currentPage++;
-            y = await addPageHeader(currentPage, totalPages);
+            y = await addPageHeader(currentPage);
         }
         
         y += 7;
@@ -478,7 +481,7 @@ async function generateDDTPDF(id) {
     
     // Controlla se serve nuova pagina per la tabella fondo
     if (y > 230) {
-        addPageFooter(currentPage, totalPages);
+        addPageFooter(currentPage);
         doc.addPage();
         currentPage++;
         y = 20; // Nuova pagina inizia in alto
@@ -549,7 +552,16 @@ async function generateDDTPDF(id) {
     doc.line(col3X, firmeY + 5, col3X + 40, firmeY + 5);
     
     // Footer ultima pagina
-    addPageFooter(currentPage, totalPages);
+    addPageFooter(currentPage);
+    
+    // Aggiorna tutti i footer con il numero totale corretto
+    const totalPages = currentPage;
+    for (let i = 0; i < totalPages; i++) {
+        doc.setPage(i + 1);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`pag. ${i + 1}/${totalPages}`, 105, 285, { align: 'center' });
+    }
     
     doc.save(`DDT_${ddtItem.numero}_${ddtItem.data}.pdf`);
 }
