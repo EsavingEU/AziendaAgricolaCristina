@@ -438,24 +438,22 @@ async function generateDDTPDF(id) {
             doc.setFont('helvetica', 'bold');
             doc.text('ARTICOLI', 20, 150);
             
-            let y = 160;
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.text('Articolo', 20, y);
-            doc.text('Quantità', 140, y);
+            doc.text('Articolo', 20, 160);
+            doc.text('Quantità', 140, 160);
             
-            y += 8;
+            let y = 168;
             doc.setFont('helvetica', 'normal');
             doc.line(20, y - 2, 190, y - 2);
         } else {
             // Pagine successive: solo logo, inizia direttamente con articoli
-            let y = 50;
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.text('Articolo', 20, y);
-            doc.text('Quantità', 140, y);
+            doc.text('Articolo', 20, 50);
+            doc.text('Quantità', 140, 50);
             
-            y += 8;
+            let y = 58;
             doc.setFont('helvetica', 'normal');
             doc.line(20, y - 2, 190, y - 2);
         }
