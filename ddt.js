@@ -320,15 +320,28 @@ function editDDT(id) {
 }
 
 async function generateDDTPDF(id) {
+    console.log('Generazione PDF per DDT ID:', id);
     const ddtItem = ddt.find(d => d.id === id);
-    if (!ddtItem) return;
+    if (!ddtItem) {
+        console.error('DDT non trovato:', id);
+        return;
+    }
+    
+    console.log('DDT trovato:', ddtItem);
     
     const cliente = clienti.find(c => c.id === ddtItem.clienteId);
-    if (!cliente) return;
+    if (!cliente) {
+        console.error('Cliente non trovato per DDT:', ddtItem.clienteId);
+        return;
+    }
+    
+    console.log('Cliente trovato:', cliente);
     
     // Carica i prodotti per avere accesso al peso
     const prodottiSnapshot = await db.collection('prodotti').get();
     const prodottiData = prodottiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    console.log('Prodotti caricati:', prodottiData.length);
     
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
