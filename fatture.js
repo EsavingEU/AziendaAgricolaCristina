@@ -445,7 +445,7 @@ async function generateFatturaPDF(id) {
         doc.text(`Data: ${fattura.data}`, 120, 42);
         
         // Linea di separazione sotto l'IBAN
-        doc.line(20, 84, 190, 82);
+        doc.line(20, 82, 190, 82);
         
         // Cliente sotto
         doc.setFontSize(14);
@@ -462,7 +462,7 @@ async function generateFatturaPDF(id) {
         doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
         
         // Linea di separazione
-        doc.line(20, 137, 190, 135);
+        doc.line(20, 135, 190, 135);
         
         return 140;
     };
