@@ -155,7 +155,8 @@ function populateClienteSelect() {
 
 function handleClienteChange() {
     const clienteId = fatturaClienteSelect.value;
-    selectedDDT = ddtNonFatturati.filter(ddt => ddt.clienteId === clienteId).map(ddt => ddt.id);
+    // Deseleziona tutti i DDT quando cambia il cliente
+    selectedDDT = [];
     renderDDTSelection();
 }
 
@@ -420,51 +421,57 @@ async function generateFatturaPDF(id) {
             doc.text('Azienda Agricola Cristina', 20, 20);
         }
         
-        // Riferimenti aziendali sotto il logo
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('P.I. 01920500228', 20, 48);
-        doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
-        doc.text('38121 Trento', 20, 60);
-        doc.text('Tel. 3333623616', 20, 66);
-        doc.text('stefano.dematte@tiscali.it', 20, 72);
-        
-        // IBAN sotto la mail
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('IBAN: IT16H0200801820000027285503', 20, 78);
-        
-        // Titolo a destra in alto
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text('FATTURA', 120, 25);
-        
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`N: ${fattura.numero}`, 120, 35);
-        doc.text(`Data: ${fattura.data}`, 120, 42);
-        
-        // Linea di separazione sotto l'IBAN
-        doc.line(20, 82, 190, 82);
-        
-        // Cliente sotto
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text('CLIENTE', 20, 92);
-        
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 99);
-        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 106);
-        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 113);
-        doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 120);
-        doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 127);
-        doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 134);
-        
-        // Linea di separazione
-        doc.line(20, 140, 190, 140);
-        
-        return 148;
+        // Solo nella prima pagina mostra tutte le informazioni
+        if (pageNum === 1) {
+            // Riferimenti aziendali sotto il logo
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('P.I. 01920500228', 20, 48);
+            doc.text('via lung\'Adige Luigi Braille, 22', 20, 54);
+            doc.text('38121 Trento', 20, 60);
+            doc.text('Tel. 3333623616', 20, 66);
+            doc.text('stefano.dematte@tiscali.it', 20, 72);
+            
+            // IBAN sotto la mail
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('IBAN: IT16H0200801820000027285503', 20, 78);
+            
+            // Titolo a destra in alto
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FATTURA', 120, 25);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`N: ${fattura.numero}`, 120, 35);
+            doc.text(`Data: ${fattura.data}`, 120, 42);
+            
+            // Linea di separazione sotto l'IBAN
+            doc.line(20, 82, 190, 82);
+            
+            // Cliente sotto
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CLIENTE', 20, 92);
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 99);
+            doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 106);
+            doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 113);
+            doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 120);
+            doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 127);
+            doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 134);
+            
+            // Linea di separazione
+            doc.line(20, 140, 190, 140);
+            
+            return 148;
+        } else {
+            // Pagine successive: solo logo, inizia direttamente con articoli
+            return 50;
+        }
     };
     
     const addPageFooter = (pageNum) => {
