@@ -429,6 +429,11 @@ async function generateFatturaPDF(id) {
         doc.text('Tel. 3333623616', 20, 66);
         doc.text('stefano.dematte@tiscali.it', 20, 72);
         
+        // IBAN sotto la mail
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('IBAN: IT16H0200801820000027285503', 20, 78);
+        
         // Titolo a destra in alto
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
@@ -439,13 +444,8 @@ async function generateFatturaPDF(id) {
         doc.text(`N: ${fattura.numero}`, 120, 35);
         doc.text(`Data: ${fattura.data}`, 120, 42);
         
-        // Linea di separazione
-        doc.line(20, 78, 190, 78);
-        
-        // IBAN sotto la linea di separazione
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('IBAN: IT16H0200801820000027285503', 20, 85);
+        // Linea di separazione sotto l'IBAN
+        doc.line(20, 84, 190, 84);
         
         // Cliente sotto
         doc.setFontSize(14);
