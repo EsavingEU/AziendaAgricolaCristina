@@ -450,21 +450,21 @@ async function generateFatturaPDF(id) {
         // Cliente sotto
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.text('CLIENTE', 20, 89);
+        doc.text('CLIENTE', 20, 92);
         
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
-        doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 96);
-        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 103);
-        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 110);
-        doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 117);
-        doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 124);
-        doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 131);
+        doc.text(`Ragione Sociale: ${cliente.ragioneSociale || '-'}`, 20, 99);
+        doc.text(`Indirizzo: ${cliente.indirizzo || '-'}`, 20, 106);
+        doc.text(`${cliente.citta || ''} (${cliente.provincia || ''}) ${cliente.cap || ''}`, 20, 113);
+        doc.text(`Telefono: ${cliente.telefono || '-'}`, 20, 120);
+        doc.text(`P.IVA: ${cliente.piva || '-'}`, 20, 127);
+        doc.text(`SDI: ${cliente.sdi || '-'}`, 20, 134);
         
         // Linea di separazione
-        doc.line(20, 135, 190, 135);
+        doc.line(20, 140, 190, 140);
         
-        return 140;
+        return 148;
     };
     
     const addPageFooter = (pageNum) => {
