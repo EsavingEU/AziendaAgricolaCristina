@@ -429,11 +429,6 @@ async function generateFatturaPDF(id) {
         doc.text('Tel. 3333623616', 20, 66);
         doc.text('stefano.dematte@tiscali.it', 20, 72);
         
-        // IBAN in grassetto
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('IBAN: IT16H0200801820000027285503', 20, 80);
-        
         // Titolo a destra in alto
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
@@ -446,6 +441,11 @@ async function generateFatturaPDF(id) {
         
         // Linea di separazione
         doc.line(20, 78, 190, 78);
+        
+        // IBAN sotto la linea di separazione
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('IBAN: IT16H0200801820000027285503', 20, 85);
         
         // Cliente sotto
         doc.setFontSize(14);
@@ -470,10 +470,6 @@ async function generateFatturaPDF(id) {
     const addPageFooter = (pageNum) => {
         // Memorizza la posizione per aggiornare il footer dopo
         footerPositions.push({ pageNum });
-        // Numerazione pagina temporanea
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`pag. ${pageNum}`, 105, 285, { align: 'center' });
     };
     
     // Prima pagina
@@ -503,7 +499,7 @@ async function generateFatturaPDF(id) {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`DDT ${ddt.numero} - ${ddt.data}`, 20, y);
-            y += 8;
+            y += 12; // Aumentato spazio per evitare sovrapposizione con linea
             
             const righeDDT = righeDaUsare.filter(riga => riga.ddtId === ddt.id);
             
@@ -565,7 +561,7 @@ async function generateFatturaPDF(id) {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text(`DDT ${ddt.numero} - ${ddt.data}`, 20, y);
-            y += 8;
+            y += 12; // Aumentato spazio per evitare sovrapposizione con linea
             
             // Intestazione tabella articoli
             doc.setFontSize(10);

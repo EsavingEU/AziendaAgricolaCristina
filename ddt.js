@@ -439,10 +439,6 @@ async function generateDDTPDF(id) {
     const addPageFooter = (pageNum) => {
         // Memorizza la posizione per aggiornare il footer dopo
         footerPositions.push({ pageNum });
-        // Numerazione pagina temporanea
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`pag. ${pageNum}`, 105, 285, { align: 'center' });
     };
     
     // Prima pagina
