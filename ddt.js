@@ -448,13 +448,18 @@ async function generateDDTPDF(id) {
     // Prima pagina
     let y = await addPageHeader(currentPage);
     
+    console.log('DDT righe totali:', ddtItem.righe.length);
+    console.log('Inizio generazione PDF, y iniziale:', y);
+    
     for (const riga of ddtItem.righe) {
         // Controlla se serve nuova pagina (limite 250)
         if (y > 250) {
+            console.log('Creazione nuova pagina, y:', y, 'pagina corrente:', currentPage);
             addPageFooter(currentPage);
             doc.addPage();
             currentPage++;
             y = await addPageHeader(currentPage);
+            console.log('Nuova pagina creata, y resettato a:', y);
         }
         
         y += 7;
@@ -474,7 +479,11 @@ async function generateDDTPDF(id) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
         }
+        
+        console.log('Riga aggiunta, y:', y);
     }
+    
+    console.log('Fine loop articoli, y finale:', y, 'pagine create:', currentPage);
     
     y += 10;
     doc.line(20, y - 2, 190, y - 2);
@@ -556,6 +565,7 @@ async function generateDDTPDF(id) {
     
     // Aggiorna tutti i footer con il numero totale corretto
     const totalPages = currentPage;
+    console.log('Aggiornamento footer - totale pagine:', totalPages);
     for (let i = 0; i < totalPages; i++) {
         doc.setPage(i + 1);
         doc.setFontSize(9);
@@ -563,5 +573,6 @@ async function generateDDTPDF(id) {
         doc.text(`pag. ${i + 1}/${totalPages}`, 105, 285, { align: 'center' });
     }
     
+    console.log('Salvataggio PDF con', totalPages, 'pagine');
     doc.save(`DDT_${ddtItem.numero}_${ddtItem.data}.pdf`);
 }
