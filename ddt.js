@@ -320,28 +320,15 @@ function editDDT(id) {
 }
 
 async function generateDDTPDF(id) {
-    console.log('Generazione PDF per DDT ID:', id);
     const ddtItem = ddt.find(d => d.id === id);
-    if (!ddtItem) {
-        console.error('DDT non trovato:', id);
-        return;
-    }
-    
-    console.log('DDT trovato:', ddtItem);
+    if (!ddtItem) return;
     
     const cliente = clienti.find(c => c.id === ddtItem.clienteId);
-    if (!cliente) {
-        console.error('Cliente non trovato per DDT:', ddtItem.clienteId);
-        return;
-    }
-    
-    console.log('Cliente trovato:', cliente);
+    if (!cliente) return;
     
     // Carica i prodotti per avere accesso al peso
     const prodottiSnapshot = await db.collection('prodotti').get();
     const prodottiData = prodottiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
-    console.log('Prodotti caricati:', prodottiData.length);
     
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -351,6 +338,8 @@ async function generateDDTPDF(id) {
     const footerPositions = [];
     
     const addPageHeader = async (pageNum) => {
+        let y;
+        
         try {
             // Carica il logo come immagine
             const logoImg = await fetch('logo.png').then(res => res.blob());
@@ -443,7 +432,7 @@ async function generateDDTPDF(id) {
             doc.text('Articolo', 20, 160);
             doc.text('Quantità', 140, 160);
             
-            let y = 168;
+            y = 168;
             doc.setFont('helvetica', 'normal');
             doc.line(20, y - 2, 190, y - 2);
         } else {
@@ -453,7 +442,7 @@ async function generateDDTPDF(id) {
             doc.text('Articolo', 20, 50);
             doc.text('Quantità', 140, 50);
             
-            let y = 58;
+            y = 58;
             doc.setFont('helvetica', 'normal');
             doc.line(20, y - 2, 190, y - 2);
         }
